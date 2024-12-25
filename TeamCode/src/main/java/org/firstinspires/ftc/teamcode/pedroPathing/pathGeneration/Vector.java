@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
 
 /**
- * This is the Point class. This class handles storing information about vectors, which are
+ * This is the Vector class. This class handles storing information about vectors, which are
  * basically Points but using polar coordinates as the default. The main reason this class exists
  * is because some vector math needs to be done in the Follower, and dot products and cross
  * products of Points just don't seem right. Also, there are a few more methods in here that make
@@ -10,7 +10,8 @@ package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
- * @version 1.0, 3/11/2024
+ * @author Dean van Beek - 3977 Stanislas Tech Team
+ * @version 1.0, 25/12/2024 (Merry Christmas)
  */
 public class Vector {
 
@@ -40,6 +41,23 @@ public class Vector {
     }
 
     /**
+     * @see <a href="#polarToCartesian(double, double)">polarToCartesian(double, double)</a>, this method does the same, but with magnitude and theta in an array.
+     *
+     * @param polarCoordinates an array with length two, containing the magnitude and theta of the Vector.
+     */
+    public Vector(double[] polarCoordinates) {
+        setComponents(polarCoordinates[0], polarCoordinates[1]);
+    }
+
+    /**
+     * TODO: documentation
+     * @param point
+     */
+    public Vector(Point point) {
+        setComponents(point.getR(),point.getTheta());
+    }
+
+    /**
      * This sets the components of the Vector in regular vector coordinates.
      *
      * @param magnitude sets the magnitude of this Vector.
@@ -54,7 +72,7 @@ public class Vector {
             this.magnitude = magnitude;
             this.theta = MathFunctions.normalizeAngle(theta);
         }
-        orthogonalComponents = Point.polarToCartesian(magnitude, theta);
+        orthogonalComponents = MathFunctions.polarToCartesian(magnitude, theta);
         xComponent = orthogonalComponents[0];
         yComponent = orthogonalComponents[1];
     }
@@ -69,8 +87,6 @@ public class Vector {
     }
 
     /**
-     * This sets only the angle, theta, of the Vector.
-     *
      * @param theta sets the angle, or theta value, of this Vector.
      */
     public void setTheta(double theta) {
@@ -78,7 +94,7 @@ public class Vector {
     }
 
     /**
-     * This rotates the Vector by an angle, theta.
+     * This rotates the Vector by an angle, theta2.
      *
      * @param theta2 the angle to be added.
      */
@@ -98,7 +114,7 @@ public class Vector {
         double[] polarComponents;
         this.xComponent = xComponent;
         this.yComponent = yComponent;
-        polarComponents = Point.cartesianToPolar(xComponent, yComponent);
+        polarComponents = MathFunctions.cartesianToPolar(xComponent, yComponent);
         magnitude = polarComponents[0];
         theta = polarComponents[1];
     }

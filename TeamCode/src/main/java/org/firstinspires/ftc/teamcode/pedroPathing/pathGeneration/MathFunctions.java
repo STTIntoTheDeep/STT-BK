@@ -9,7 +9,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
- * @version 1.0, 3/9/2024
+ * @author Dean van Beek - 3977 Stanislas Tech Team
+ * @version 1.0, 25/12/2024 (Merry Christmas)
  */
 public class MathFunctions {
 
@@ -211,6 +212,20 @@ public class MathFunctions {
     }
 
     /**
+     * TODO: documentation
+     * @param points
+     * @return
+     */
+    public static Point averagePoints(Point[] points) {
+        double averageX = 0, averageY = 0;
+        for (Point point : points) {
+            averageX += point.getX();
+            averageY += point.getY();
+        }
+        return new Point(averageX,averageY,Point.CARTESIAN);
+    }
+
+    /**
      * Copies a Vector, but with a different reference location in the memory. So basically a deep
      * copy.
      *
@@ -275,6 +290,20 @@ public class MathFunctions {
     }
 
     /**
+     * TODO: documentation
+     * @param vectors
+     * @return
+     */
+    public static Vector averageVectors(Vector[] vectors) {
+        double averageX = 0, averageY = 0;
+        for (Vector vector : vectors) {
+            averageX += vector.getXComponent();
+            averageY += vector.getYComponent();
+        }
+        return new Vector(cartesianToPolar(averageX,averageY));
+    }
+
+    /**
      * This computes the dot product of the two Vectors.
      *
      * @param one the first Vector.
@@ -320,4 +349,60 @@ public class MathFunctions {
     public static boolean roughlyEquals(double one, double two) {
         return roughlyEquals(one, two, 0.0001);
     }
+
+    /**
+     * This takes in an r and theta value and converts them to Cartesian coordinates.
+     *
+     * @param r this is the r value of the Point being converted.
+     * @param theta this is the theta value of the Point being converted.
+     * @return this returns the x and y values, in that order, in an Array of doubles.
+     */
+    public static double[] polarToCartesian(double r, double theta) {
+        return new double[]{r * Math.cos(theta), r * Math.sin(theta)};
+    }
+
+    /**
+     * @see <a href="#polarToCartesian(double, double)">polarToCartesian(double, double)</a>, this method does the same thing.
+     */
+    public static double[] polarToCartesian(double[] polarCoordinates){return polarToCartesian(polarCoordinates[0],polarCoordinates[1]);}
+
+    /**
+     * This takes in an x and y value and converts them to polar coordinates.
+     *
+     * @param x this is the x value of the Point being converted.
+     * @param y this is the y value of the Point being converted.
+     * @return this returns the r and theta values, in that order, in an Array of doubles.
+     */
+    public static double[] cartesianToPolar(double x, double y) {
+        if (x == 0) {
+            if (y > 0) {
+                return new double[]{Math.abs(y), Math.PI / 2};
+            } else {
+                return new double[]{Math.abs(y), (3 * Math.PI) / 2};
+            }
+        }
+        double r = Math.sqrt(x * x + y * y);
+        if (x < 0) return new double[]{r, Math.PI + Math.atan(y / x)};
+        if (y > 0) {
+            return new double[]{r, Math.atan(y / x)};
+        } else {
+            return new double[]{r, (2 * Math.PI) + Math.atan(y / x)};
+        }
+    }
+    /**
+     * @see <a href="#cartesianToPolar(double, double)">cartesianToPolar(double, double)</a>, this method does the same thing.
+     */
+    public static double[] cartesianToPolar(double[] coordinates){return cartesianToPolar(coordinates[0],coordinates[1]);}
+
+    /**TODO documentation
+     * Alts:
+     * (r*r+r)/2 (only positive)
+     * (r*r*r+r)/2
+     * Math.sin(2*Math.PI*r)/12 + r
+     * Math.sin(2*Math.PI*r)/8 + r*r
+     * @param r initial parameter (intended to be the r from a polar drive function)
+     * @return An exaggerated r.
+     */
+    //TODO: tests alts
+    public static double exaggerate(double r) {return Math.sin(2*Math.PI*r) / 9 + r;}
 }

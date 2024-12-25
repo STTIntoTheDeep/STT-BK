@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.CustomFilteredPIDFCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.CustomPIDFCoefficients;
@@ -22,24 +21,44 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.KalmanFilterParameters;
  */
 @Config
 public class FollowerConstants {
+    //TODO: maybe remove this and just put it in TUNING.md, like the localizer.
+    public enum Drivetrains {
+        Mecanum,
+        DifferentialSwerve
+    }
 
-    // This section is for configuring your motors
-    public static String leftFrontMotorName = "leftFront";
-    public static String leftRearMotorName = "leftRear";
-    public static String rightFrontMotorName = "rightFront";
-    public static String rightRearMotorName = "rightRear";
+    public static Drivetrains drivetrain = Drivetrains.DifferentialSwerve;
+
+    //TODO enumerator?
+
+    // This section is for configuring your motors.
+    public static String leftFrontMotorName = "left_front"; //leftFrontTop
+    public static String leftRearMotorName = "left_back"; //leftFrontBottom
+    public static String rightFrontMotorName = "right_front"; //rightFrontTop
+    public static String rightRearMotorName = "right_back"; //rightFrontBottom
+    //only necessary for six or eight motor drivetrains
+    public static String backLeftFrontMotorName = "motor_five"; //leftBackTop
+    public static String backLeftRearMotorName = "motor_six";//leftBackBottom
+    public static String backRightFrontMotorName = "motor_seven"; //rightBackTop
+    public static String backRightRearMotorName = "motor_eight";//rightBackBottom
 
     public static DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public static DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public static DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public static DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
+    public static DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
     public static DcMotorSimple.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+    //only necessary for six or eight motor drivetrains
+    public static DcMotorSimple.Direction backLeftFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public static DcMotorSimple.Direction backLeftRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public static DcMotorSimple.Direction backRightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public static DcMotorSimple.Direction backRightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
 
     // This section is for setting the actual drive vector for the front left wheel, if the robot
-    // is facing a heading of 0 radians with the wheel centered at (0,0)
-    private static double xMovement = 81.34056;
-    private static double yMovement = 65.43028;
-    private static double[] convertToPolar = Point.cartesianToPolar(xMovement, -yMovement);
-    public static Vector frontLeftVector = MathFunctions.normalizeVector(new Vector(convertToPolar[0], convertToPolar[1]));
+    // is facing a heading of 0 radians with the wheel centered at (0,0).
+    // Only necessary for mecanum drivetrains.
+    private static final double xMovement = 67;
+    private static final double yMovement = 53;
+    private static final double[] convertToPolar = MathFunctions.cartesianToPolar(xMovement, -yMovement);
+    public static Vector frontLeftVector = MathFunctions.normalizeVector(new Vector(convertToPolar[0],convertToPolar[1]));
 
 
     // Translational PIDF coefficients (don't use integral)
@@ -62,9 +81,9 @@ public class FollowerConstants {
 
     // Heading error PIDF coefficients
     public static CustomPIDFCoefficients headingPIDFCoefficients = new CustomPIDFCoefficients(
-            1,
+            1.25,
             0,
-            0,
+            0.001,
             0);
 
     // Feed forward constant added on to the heading PIDF
@@ -73,7 +92,7 @@ public class FollowerConstants {
 
     // Drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients drivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.025,
+            0.005,
             0,
             0.00001,
             0.6,
@@ -84,12 +103,12 @@ public class FollowerConstants {
 
     // Kalman filter parameters for the drive error Kalman filter
     public static KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(
-            6,
+            8,
             1);
 
 
     // Mass of robot in kilograms
-    public static double mass = 10.65942;
+    public static double mass = 15.0;
 
     // Centripetal force to power scaling
     public static double centripetalScaling = 0.0005;
@@ -97,7 +116,7 @@ public class FollowerConstants {
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    public static double forwardZeroPowerAcceleration = -34.62719;
+    public static double forwardZeroPowerAcceleration = -33;
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
