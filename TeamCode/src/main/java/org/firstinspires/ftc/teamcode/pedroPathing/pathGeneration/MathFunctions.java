@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
  * @author Dean van Beek - 3977 Stanislas Tech Team
- * @version 1.0, 25/12/2024 (Merry Christmas)
+ * @version 1.0, 25/12/2024 (Happy Christmas)
  */
 public class MathFunctions {
 
@@ -212,16 +212,6 @@ public class MathFunctions {
     }
 
     /**
-     * Copies a Point, but to a Vector. This means some information might get lost.
-     *
-     * @param point the Point to be deep copied.
-     * @return returns the copied Point as Vector.
-     */
-    public static Vector copyPointToVector(Point point) {
-        return new Vector(point.getR(), point.getTheta());
-    }
-
-    /**
      * TODO: documentation
      * @param points
      * @return
@@ -235,6 +225,23 @@ public class MathFunctions {
         averageX /= points.length;
         averageY /= points.length;
         return new Point(averageX,averageY,Point.CARTESIAN);
+    }
+
+    /**
+     * TODO: documentation
+     * @param vectors
+     * @param maxMagnitude
+     * @return
+     */
+    public static boolean vectorsTooBig(Vector[] vectors, double maxMagnitude) {
+        boolean tooBig = false;
+        for (Vector vector : vectors) {
+            if (vector.getMagnitude() > maxMagnitude) {
+                tooBig = true;
+                break;
+            }
+        }
+        return tooBig;
     }
 
     /**

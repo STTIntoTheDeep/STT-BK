@@ -354,7 +354,8 @@ public class MecanumDrivetrain extends Drivetrain {
         rightFront.setPower(motorPowers[2]);
         rightRear.setPower(motorPowers[3]);
     }
-    private void setMotors() {
+    @Override
+    public void setMotors() {
         // Motor powers are sent to the motors.
         j = 0;
         for (DcMotorEx motor : new DcMotorEx[]{leftFront, leftRear, rightFront, rightRear}) {

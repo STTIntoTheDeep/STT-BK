@@ -29,6 +29,8 @@ public class FollowerConstants {
 
     public static Drivetrains drivetrain = Drivetrains.Mecanum;
 
+    public static int numberOfMotors = 4;
+
     //TODO enumerator?
 
     // This section is for configuring your motors.
@@ -42,6 +44,8 @@ public class FollowerConstants {
     public static String backRightFrontMotorName = "motor_seven"; //rightBackTop
     public static String backRightRearMotorName = "motor_eight";//rightBackBottom
 
+    // For mecanum, these directions should be in such a way that when all powers are positive, the robot drives forwards.
+    // For differential swerve, these directions should be in such a way that when all powers are positive, each pod drives forwards and doesn't rotate.
     public static DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
     public static DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
     public static DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;

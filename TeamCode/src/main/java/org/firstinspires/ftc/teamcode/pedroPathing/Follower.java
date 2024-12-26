@@ -63,7 +63,7 @@ import java.util.List;
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
  * @author Dean van Beek - 3977 Stanislas Tech Team
- * @version 1.0, 25/12/2024 (Merry Christmas)
+ * @version 1.0, 25/12/2024 (Happy Christmas)
  */
 @Config
 public class Follower {

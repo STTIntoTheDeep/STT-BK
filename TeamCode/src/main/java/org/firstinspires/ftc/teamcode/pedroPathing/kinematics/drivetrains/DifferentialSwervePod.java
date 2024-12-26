@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
  * TODO: documentation
  *
  * @author Dean van Beek - 3977 Stanislas Tech Team
- * @version 1.0, 25/12/2024 (Merry Christmas)
+ * @version 1.0, 25/12/2024 (Happy Christmas)
  */
 public class DifferentialSwervePod {
     //Choose yourself if 0,0 is centre of the robot or bottom corner.
@@ -75,7 +75,7 @@ public class DifferentialSwervePod {
      * @return motor powers
      */
     public double[] calculateMotorPowers(Vector drive) {
-        if (drive.getMagnitude() == 0) return new double[] {0,0};
+        if (MathFunctions.roughlyEquals(drive.getMagnitude(), 0)) return new double[] {0,0};
 
         // update sensor data
         //FIXME
@@ -129,7 +129,7 @@ public class DifferentialSwervePod {
 
     /**
      * TODO documentation
-     * turns left because Pedro
+     * turns left.
      * normalized
      *
      * @param centre
@@ -137,7 +137,7 @@ public class DifferentialSwervePod {
     public void setRotateVector(Point centre) {
         Vector normal = new Vector(MathFunctions.subtractPoints(location,centre));
         normal.rotateVector(Math.PI*0.5);
-        rotateVector = normal;
+        rotateVector = MathFunctions.copyVector(normal);
         rotateVector.setMagnitude(1);
     }
 

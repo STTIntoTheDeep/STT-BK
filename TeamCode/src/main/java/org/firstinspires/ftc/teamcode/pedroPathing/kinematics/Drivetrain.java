@@ -31,20 +31,22 @@ import java.util.List;
  */
 public abstract class Drivetrain {
     protected List<DcMotorEx> motors;
-    private double[] drivePowers;
+    private double[] motorPowers;
 
     protected double maxPowerScaling = 1;
 
+    /**
+     * TODO: documentation
+     */
     public abstract void initialize();
 
     /**
-     * This takes in vectors for corrective power, heading power, and pathing power and outputs
+     * This takes in field centric vectors for corrective power, heading power, and pathing power and outputs
      * an Array of four doubles, one for each wheel's motor power.
-     * [STT]: Pretty sure the input vectors are field centric.
      * IMPORTANT NOTE: all vector inputs are clamped between 0 and 1 inclusive in magnitude.
      *
      * @param correctivePower this Vector includes the centrifugal force scaling Vector as well as a
-     *                        translational power Vector to correct onto the Bezier curve the Follower
+     *                        translational power Vector to correct onto the Bézier curve the Follower
      *                        is following.
      * @param headingPower this Vector points in the direction of the robot's current heading, and
      *                     the magnitude tells the robot how much it should turn and in which
@@ -53,7 +55,7 @@ public abstract class Drivetrain {
      *                     the Path.
      * @param robotHeading this is the current heading of the robot, which is used to calculate how
      *                     much power to allocate to each wheel.
-     * @return this returns an Array of doubles with a length of 4, which contains the wheel powers.
+     * @return this returns an Array of doubles, which contains the wheel powers.
      */
     public abstract double[] getDrivePowers(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading);
 
@@ -100,6 +102,15 @@ public abstract class Drivetrain {
      */
     public double getMaxPowerScaling() {
         return maxPowerScaling;
+    }
+
+    /**
+     * TODO: documentation
+     */
+    public void setMotors() {
+        for (int i = 0; i < motors.size(); i++) {
+            motors.get(i).setPower(motorPowers[i]);
+        }
     }
 
     /**
