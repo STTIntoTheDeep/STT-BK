@@ -39,7 +39,7 @@ public class MecanumDrivetrain extends Drivetrain {
     private DcMotorEx leftFront,leftRear,rightFront,rightRear;
 
     // This is ordered left front, left back, right front, right back. These are also normalized.
-    private Vector[] mecanumVectors;
+    private final Vector[] mecanumVectors;
 
     int j;
 
@@ -142,7 +142,7 @@ public class MecanumDrivetrain extends Drivetrain {
                 }
             }
         }
-
+        //[STT] no idea why this is. Maybe because of the multiplication later.
         truePathingVectors[0] = MathFunctions.scalarMultiplyVector(truePathingVectors[0], 2.0);
         truePathingVectors[1] = MathFunctions.scalarMultiplyVector(truePathingVectors[1], 2.0);
 

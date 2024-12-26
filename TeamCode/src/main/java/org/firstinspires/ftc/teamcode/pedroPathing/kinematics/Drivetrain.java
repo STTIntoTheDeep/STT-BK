@@ -24,7 +24,7 @@ import java.util.List;
  * This is the Drivetrain class. Based off the Localizer structure, it is an abstract superclass of all drivetrains used in STT Pedro Pathing,
  * so it contains abstract methods that will have a concrete implementation in the subclasses. Any
  * method that all drivetrains will need will be in this class.
- * Note: Contrary to the Localizer, we only added documentation here, since that carries over into implementations of the methods. DRY.
+ * Note: Contrary to the Localizer, STT only added documentation here, since that carries over into implementations of the methods. DRY.
  *
  * @author Dean van Beek
  * @version 1.0, 24/12/2024
@@ -82,7 +82,6 @@ public abstract class Drivetrain {
             double b = staticVector.getXComponent() * variableVector.getXComponent() + staticVector.getYComponent() * variableVector.getYComponent();
             double c = Math.pow(staticVector.getXComponent(), 2) + Math.pow(staticVector.getYComponent(), 2) - Math.pow(maxPowerScaling, 2);
             return (-b + Math.sqrt(Math.pow(b, 2) - a*c))/(a);
-
     }
 
     /**

@@ -32,7 +32,7 @@ public class DifferentialSwervePod {
     private double currentAngle, deltaAngle, rotatePower;
 
     // Note: position is in ticks, and TPR converts to rotations (not radians)
-    private final double ticksPerRotation = 537.7/15*26;//TODO: change
+    private final double ticksPerRotation = 4096;//TODO: change
     private final double encoderGearRatio = 1.0;
 
     private CustomPIDFCoefficients podPIDFCoefficients = new CustomPIDFCoefficients(
@@ -75,6 +75,8 @@ public class DifferentialSwervePod {
      * @return motor powers
      */
     public double[] calculateMotorPowers(Vector drive) {
+        if (drive.getMagnitude() == 0) return new double[] {0,0};
+
         // update sensor data
         //FIXME
         position += sensor.getCurrentPosition();

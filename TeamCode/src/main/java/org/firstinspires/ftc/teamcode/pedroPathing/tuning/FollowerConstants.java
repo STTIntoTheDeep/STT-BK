@@ -27,7 +27,7 @@ public class FollowerConstants {
         DifferentialSwerve
     }
 
-    public static Drivetrains drivetrain = Drivetrains.DifferentialSwerve;
+    public static Drivetrains drivetrain = Drivetrains.Mecanum;
 
     //TODO enumerator?
 

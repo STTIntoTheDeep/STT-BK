@@ -212,6 +212,16 @@ public class MathFunctions {
     }
 
     /**
+     * Copies a Point, but to a Vector. This means some information might get lost.
+     *
+     * @param point the Point to be deep copied.
+     * @return returns the copied Point as Vector.
+     */
+    public static Vector copyPointToVector(Point point) {
+        return new Vector(point.getR(), point.getTheta());
+    }
+
+    /**
      * TODO: documentation
      * @param points
      * @return
@@ -222,6 +232,8 @@ public class MathFunctions {
             averageX += point.getX();
             averageY += point.getY();
         }
+        averageX /= points.length;
+        averageY /= points.length;
         return new Point(averageX,averageY,Point.CARTESIAN);
     }
 
@@ -300,6 +312,8 @@ public class MathFunctions {
             averageX += vector.getXComponent();
             averageY += vector.getYComponent();
         }
+        averageX /= vectors.length;
+        averageY /= vectors.length;
         return new Vector(cartesianToPolar(averageX,averageY));
     }
 

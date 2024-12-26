@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
@@ -13,6 +14,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.CustomPIDFCoefficients;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 
 import java.util.Arrays;
 import java.util.List;
@@ -57,21 +60,20 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
         leftFrontBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.leftRearMotorName);
         rightFrontTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.rightFrontMotorName);
         rightFrontBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.rightRearMotorName);
-        //only necessary for three or four pod drivetrains
-        leftBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
-        leftBackBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
-        rightBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backRightFrontMotorName);
-        rightBackBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.backRightRearMotorName);
-
         leftFrontTop.setDirection(FollowerConstants.leftFrontMotorDirection);
         leftFrontBottom.setDirection(FollowerConstants.leftRearMotorDirection);
         rightFrontTop.setDirection(FollowerConstants.rightFrontMotorDirection);
         rightFrontBottom.setDirection(FollowerConstants.rightRearMotorDirection);
-        // only necessary for three or four pod drivetrains
-        leftBackTop.setDirection(FollowerConstants.backLeftFrontMotorDirection);
-        leftBackBottom.setDirection(FollowerConstants.backLeftRearMotorDirection);
-        rightBackTop.setDirection(FollowerConstants.backRightFrontMotorDirection);
-        rightBackBottom.setDirection(FollowerConstants.backRightRearMotorDirection);
+
+        //only necessary for three or four pod drivetrains
+//        leftBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
+//        leftBackBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
+//        rightBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backRightFrontMotorName);
+//        rightBackBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.backRightRearMotorName);
+//        leftBackTop.setDirection(FollowerConstants.backLeftFrontMotorDirection);
+//        leftBackBottom.setDirection(FollowerConstants.backLeftRearMotorDirection);
+//        rightBackTop.setDirection(FollowerConstants.backRightFrontMotorDirection);
+//        rightBackBottom.setDirection(FollowerConstants.backRightRearMotorDirection);
 
         motors = Arrays.asList(leftFrontTop, leftFrontBottom, rightFrontBottom, rightFrontTop);
 
@@ -183,11 +185,6 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
             }
         }
 
-        for (int i = 0; i < pods.size(); i++) {
-            //[STT] no idea why this is
-            truePathingVectors[i] = MathFunctions.scalarMultiplyVector(truePathingVectors[i], 2.0);
-        }
-
         // this bit is different then MecanumDrivetrain, as you have to calculate powers for the pods
         for (int i = 0; i < pods.size(); i++) {
             double[] podPowers = pods.get(i).calculateMotorPowers(truePathingVectors[i]);
@@ -210,5 +207,49 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
         }
 
         return motorPowers;
+    }
+    //TODO: remove
+
+    public static int rotations = 0;
+    double x, y, r, gamepadTheta, pidR, pidB, TICKS_PER_ROTATION = 537.7/15*26;
+    int redCurrentPos, blueCurrentPos, FBpos, FRpos,BBpos,BRpos, redHeadingGoal = 0, blueHeadingGoal = 0;
+    int[] encoderPositions = {FBpos,FRpos,BBpos,BRpos};
+    private CustomPIDFCoefficients podPIDFCoefficients = new CustomPIDFCoefficients(
+            0.0025,
+            0.001,
+            0.00004,
+            0);
+
+    private PIDFController blueHeading = new PIDFController(podPIDFCoefficients),
+    redHeading = new PIDFController(podPIDFCoefficients);
+
+    public void singleJoyStickPID(double x, double y) {
+        Vector drive = MathFunctions.copyPointToVector(new Point(x, y, Point.CARTESIAN));
+        r = drive.getMagnitude();
+        gamepadTheta = drive.getTheta();
+
+        for (int i = 0; i < motors.size(); i++) {
+            encoderPositions[i] = motors.get(i).getCurrentPosition();
+        }
+
+        redCurrentPos = encoderPositions[1] - encoderPositions[3];
+        blueCurrentPos = encoderPositions[0] - encoderPositions[2];
+
+
+        if(r > 0.3){
+            //TODO: stop rotation all the way back, maybe with gm0/FTClib button press to event?
+            redHeadingGoal = (int) ((gamepadTheta-0.5*Math.PI)/(Math.PI)*TICKS_PER_ROTATION + rotations * 2 * TICKS_PER_ROTATION);
+            blueHeadingGoal = (int) ((gamepadTheta-0.5*Math.PI)/(Math.PI)*TICKS_PER_ROTATION + rotations * 2 * TICKS_PER_ROTATION);
+        }
+
+        redHeading.updateError(redHeadingGoal - redCurrentPos);
+        pidR = redHeading.runPIDF();
+
+        blueHeading.updateError(blueHeadingGoal - blueCurrentPos);
+
+        motors.get(0).setPower(pidB - r);
+        motors.get(1).setPower(pidR + r);
+        motors.get(2).setPower(-pidB - r);
+        motors.get(3).setPower(-pidR + r);
     }
 }
