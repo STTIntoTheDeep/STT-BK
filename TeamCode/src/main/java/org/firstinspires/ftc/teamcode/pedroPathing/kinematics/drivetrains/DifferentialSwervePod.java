@@ -1,19 +1,10 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains;
 
-import android.hardware.Sensor;
-
-import androidx.annotation.NonNull;
-
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Encoder;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
-import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.CustomPIDFCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 
@@ -27,18 +18,17 @@ public class DifferentialSwervePod {
     //Choose yourself if 0,0 is centre of the robot or bottom corner.
     private Point location;
     private Vector rotateVector;
-    private boolean absoluteSensor;
-    private int rotations = 0, position;
-    private double currentAngle, deltaAngle, rotatePower;
+    private int position;
+    double theta = 0, r, rotatePower, currentAngle, targetAngle, maxPower;
 
     // Note: position is in ticks, and TPR converts to rotations (not radians)
-    private final double ticksPerRotation = 4096;//TODO: change
-    private final double encoderGearRatio = 1.0;
+    private final double TICKS_PER_ROTATION = 8192,//TODO: change
+    encoderGearRatio = 1.0;
 
-    private CustomPIDFCoefficients podPIDFCoefficients = new CustomPIDFCoefficients(
-            0.0025,
-            0.001,
-            0.00004,
+    private final CustomPIDFCoefficients podPIDFCoefficients = new CustomPIDFCoefficients(
+            1.0,
+            0.0,
+            0.04,
             0);
 
     private PIDFController podPIDF = new PIDFController(podPIDFCoefficients);
@@ -47,65 +37,61 @@ public class DifferentialSwervePod {
 
     /** TODO documentation
      */
-    public DifferentialSwervePod(Point location, DcMotorEx sensor, boolean absoluteSensor) {
+    public DifferentialSwervePod(Point location, DcMotorEx sensor) {
         setLocation(location);
         this.sensor = sensor;
-        this.absoluteSensor = absoluteSensor;
     }
 
     /** TODO: documentation
-     *  pod with no location means location zero zero
+     *  pod with no location means location (0,0)
      */
     public DifferentialSwervePod() {setLocation(new Point(0,0,Point.CARTESIAN));}
 
     /**
      * TODO: documentation
      * @see <a href="#calculateMotorPowers(Vector)">calculateMotorPowers(Vector)</a> but with separate rotate
-     * @param drive
+     * @param input
      * @param rotatePower
      * @return motor powers
      */
-    public double[] calculateMotorPowers(Vector drive, double rotatePower) {
-        return calculateMotorPowers(MathFunctions.addVectors(drive, MathFunctions.scalarMultiplyVector(rotateVector, rotatePower)));
+    public double[] calculateMotorPowers(Vector input, double rotatePower) {
+        Vector vector = MathFunctions.addVectors(input, MathFunctions.scalarMultiplyVector(rotateVector, rotatePower));
+        if (vector.getMagnitude() > 1) vector = MathFunctions.normalizeVector(vector);
+        return calculateMotorPowers(vector);
     }
 
     /**
      * TODO: documentation
-     * @param drive has to be robot centric already, and the magnitude has to be clamped already
+     * @param input has to be robot centric already, and the magnitude has to be clamped already
      * @return motor powers
      */
-    public double[] calculateMotorPowers(Vector drive) {
-        if (MathFunctions.roughlyEquals(drive.getMagnitude(), 0)) return new double[] {0,0};
+    public double[] calculateMotorPowers(Vector input) {
+        if (MathFunctions.roughlyEquals(input.getMagnitude(), 0)) return new double[]{0, 0};
+        double[] motorPowers = new double[2];
 
-        // update sensor data
-        //FIXME
-        position += sensor.getCurrentPosition();
+        theta = input.getTheta();
+        position = sensor.getCurrentPosition();
 
-        // calculate where the pod currently is
-        //TODO: figure something out if gear ratio isn't 1:1
-        if (absoluteSensor) currentAngle = position / ticksPerRotation * 2*Math.PI;
-        else {
-            currentAngle = (position / ticksPerRotation - rotations) * 2*Math.PI;
-            //this shouldn't trigger most of the time, and it really shouldn't trigger twice, ever, but it might
-            while (currentAngle > 2*Math.PI) {
-                rotations--;
-                currentAngle = (position / ticksPerRotation - rotations) * 2*Math.PI;
-            }
-            while (currentAngle < 0) {
-                rotations++;
-                currentAngle = (position / ticksPerRotation - rotations) * 2*Math.PI;
-            }
-        }
+        currentAngle = MathFunctions.normalizeAngle(position / TICKS_PER_ROTATION * 2 * Math.PI);
 
-        //calculate where to go to, and if to reverse the motors (because that's faster than turning the pod half a rotation)
-        deltaAngle = drive.getTheta() - currentAngle;
-        if (deltaAngle > 2*Math.PI) deltaAngle -= 2*Math.PI;
-        else if (deltaAngle < 0) deltaAngle += 2*Math.PI;
+        targetAngle = MathFunctions.normalizeAngle(theta - currentAngle);
+        int direction = 1;
+        if (targetAngle > 1.5 * Math.PI) targetAngle -= 2*Math.PI;
+        else if (targetAngle > 0.5 * Math.PI) {targetAngle -= Math.PI; direction = -1;}
 
+        podPIDF.updateError(targetAngle);
         rotatePower = MathFunctions.clamp(podPIDF.runPIDF(), -1, 1);
 
-        if (deltaAngle > 0.5*Math.PI || deltaAngle < -0.5*Math.PI) return new double[] {-drive.getMagnitude(), -drive.getMagnitude() + 2 * rotatePower};
-        else return new double[] {drive.getMagnitude() - 2 * rotatePower, drive.getMagnitude()};
+        r = direction * (input.getMagnitude() - rotatePower);
+
+        motorPowers[0] = -rotatePower + r;
+        motorPowers[1] = rotatePower + r;
+        maxPower = Math.max(Math.abs(motorPowers[0]), Math.abs(motorPowers[1]));
+        if (maxPower > 1) {
+            motorPowers[0] /= maxPower;
+            motorPowers[1] /= maxPower;
+        }
+        return motorPowers;
     }
 
     /**
@@ -158,5 +144,5 @@ public class DifferentialSwervePod {
     /**
      * TODO: documentation
      */
-    public void restPIDF() {podPIDF.reset();}
+    public void resetPIDF() {podPIDF.reset();}
 }

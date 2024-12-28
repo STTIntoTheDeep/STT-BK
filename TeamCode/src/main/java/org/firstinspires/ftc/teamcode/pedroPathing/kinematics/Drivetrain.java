@@ -1,23 +1,11 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.kinematics;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,10 +18,13 @@ import java.util.List;
  * @version 1.0, 24/12/2024
  */
 public abstract class Drivetrain {
-    protected List<DcMotorEx> motors;
-    private double[] motorPowers;
+    public List<DcMotorEx> motors;
 
-    protected double maxPowerScaling = 1;
+    //TODO: remove if this causes an NPE
+    public List<hardware.motors> drivetrainMotors;
+    private double[] motorPowers;
+    protected double maxPowerScaling = 1, robotHeading;
+    protected int separateVectors;
 
     /**
      * TODO: documentation
@@ -41,10 +32,36 @@ public abstract class Drivetrain {
     public abstract void initialize();
 
     /**
-     * This takes in field centric vectors for corrective power, heading power, and pathing power and outputs
-     * an Array of four doubles, one for each wheel's motor power.
-     * IMPORTANT NOTE: all vector inputs are clamped between 0 and 1 inclusive in magnitude.
      *
+     * @param correctivePower
+     * @param headingPower
+     * @param pathingPower
+     * @param robotHeading
+     */
+    public void run(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
+        //FIXME
+        //TODO: test in IntelliJ that sets the same motor powers as getDrivePowers outputs.
+
+        // clamps down the magnitudes of the input vectors
+        if (correctivePower.getMagnitude() > maxPowerScaling) correctivePower.setMagnitude(maxPowerScaling);
+        if (headingPower.getMagnitude() > maxPowerScaling) headingPower.setMagnitude(maxPowerScaling);
+        if (pathingPower.getMagnitude() > maxPowerScaling) pathingPower.setMagnitude(maxPowerScaling);
+        this.robotHeading = MathFunctions.normalizeAngle(robotHeading);
+
+        // makes the vectors robot centric
+        correctivePower.rotateVector(-robotHeading);
+        pathingPower.rotateVector(-robotHeading);
+
+        // this contains the pathing vectors, one for each pod (heading control requires at least 2)
+        Vector[] truePathingVectors = prioritizeVectors(correctivePower, headingPower, pathingPower, robotHeading);
+
+//        motorPowers = getDrivePowers(correctivePower, headingPower, pathingPower, robotHeading);
+        motorPowers = calculateMotorPowers(truePathingVectors);
+        setMotors();
+    }
+
+    /**
+     * TODO: documentation
      * @param correctivePower this Vector includes the centrifugal force scaling Vector as well as a
      *                        translational power Vector to correct onto the Bézier curve the Follower
      *                        is following.
@@ -55,8 +72,95 @@ public abstract class Drivetrain {
      *                     the Path.
      * @param robotHeading this is the current heading of the robot, which is used to calculate how
      *                     much power to allocate to each wheel.
-     * @return this returns an Array of doubles, which contains the wheel powers.
+     * @return this returns an Array of Vectors, which contains the wheel powers.
      */
+    public Vector[] prioritizeVectors(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
+        Vector[] truePathingVectors = new Vector[separateVectors];
+
+        //TODO: most of this is the same as in MecanumDrive, save for the loops. If you add those to MecanumDrive you can probably transfer a bunch of this math to Drivetrain.java
+        if (correctivePower.getMagnitude() == maxPowerScaling) {
+            // checks for corrective power equal to max power scaling in magnitude. if equal, then set the power to that and exit the method
+            for (int i = 0; i < separateVectors; i++) {
+                truePathingVectors[i] = MathFunctions.copyVector(correctivePower);
+            }
+            return truePathingVectors;
+        }
+
+        // corrective power did not take up all the power, so add on heading power, but as a scalar applied to the rotate vector of the pod
+        // this is the only vector logic that is different per drivetrain
+        Vector[] podVectorsWithHeading = applyHeadingVectors(correctivePower, headingPower);
+
+        // if one of the vectors is now longer than allowed, heading needs to be scaled down, then exit the method
+        if (MathFunctions.vectorsTooBig(podVectorsWithHeading, maxPowerScaling)) {
+            // too much power now, so we scale down the heading vector
+            double headingScalingFactor = Math.min(findNormalizingScaling(correctivePower, headingPower), findNormalizingScaling(correctivePower, MathFunctions.scalarMultiplyVector(headingPower, -1)));
+            truePathingVectors = applyHeadingVectors(correctivePower, new Vector(headingPower.getMagnitude() * headingScalingFactor, headingPower.getTheta()));
+            return truePathingVectors;
+        }
+
+        // if we're here then we can add on some drive power but scaled down to 1
+        Vector[] podVectorsWithPathing = new Vector[separateVectors];
+
+        for (int i = 0; i < separateVectors; i++) {
+            podVectorsWithPathing[i] = MathFunctions.addVectors(podVectorsWithHeading[i], pathingPower);
+        }
+
+        // if one of the vectors is now longer than allowed, pathing needs to be scaled down, then exit the method
+        if (MathFunctions.vectorsTooBig(podVectorsWithPathing, maxPowerScaling)) {
+            // too much power now, so we scale down the pathing vector
+            double pathingScalingFactor = Math.min(findNormalizingScaling(podVectorsWithHeading[0], pathingPower), findNormalizingScaling(podVectorsWithHeading[1], pathingPower));
+            //this only runs for more than two pods
+            for (int i = 2; i < separateVectors; i++) {
+                pathingScalingFactor = Math.min(pathingScalingFactor, findNormalizingScaling(podVectorsWithHeading[i], pathingPower));
+            }
+            //sets the true pathing vectors
+            for (int i = 0; i < separateVectors; i++) {
+                truePathingVectors[i] = MathFunctions.addVectors(podVectorsWithHeading[i], MathFunctions.scalarMultiplyVector(pathingPower, pathingScalingFactor));
+            }
+            return truePathingVectors;
+        }
+
+        // if nothing overflows, just add the vectors together and you get the final vector
+        for (int i = 0; i < separateVectors; i++) {
+            truePathingVectors[i] = MathFunctions.copyVector(podVectorsWithPathing[i]);
+        }
+        return truePathingVectors;
+    }
+
+    /**
+     * TODO: documentation
+     * @param vector
+     * @param headingPower
+     * @return
+     */
+    public abstract Vector[] applyHeadingVectors(Vector vector, Vector headingPower);
+
+    /**
+     * TODO: documentation
+     * @param truePathingVectors
+     * @return
+     */
+    public abstract double[] calculateMotorPowers(Vector[] truePathingVectors);
+
+
+        /**
+         * This takes in field centric vectors for corrective power, heading power, and pathing power and outputs
+         * an Array of four doubles, one for each wheel's motor power.
+         * IMPORTANT NOTE: all vector inputs are clamped between 0 and 1 inclusive in magnitude.
+         *
+         * @param correctivePower this Vector includes the centrifugal force scaling Vector as well as a
+         *                        translational power Vector to correct onto the Bézier curve the Follower
+         *                        is following.
+         * @param headingPower this Vector points in the direction of the robot's current heading, and
+         *                     the magnitude tells the robot how much it should turn and in which
+         *                     direction.
+         * @param pathingPower this Vector points in the direction the robot needs to go to continue along
+         *                     the Path.
+         * @param robotHeading this is the current heading of the robot, which is used to calculate how
+         *                     much power to allocate to each wheel.
+         * @return this returns an Array of doubles, which contains the wheel powers.
+         */
+    @Deprecated
     public abstract double[] getDrivePowers(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading);
 
     /**
@@ -108,8 +212,11 @@ public abstract class Drivetrain {
      * TODO: documentation
      */
     public void setMotors() {
-        for (int i = 0; i < motors.size(); i++) {
-            motors.get(i).setPower(motorPowers[i]);
+//        for (int i = 0; i < motors.size(); i++) {
+//            motors.get(i).setPower(motorPowers[i]);
+//        }
+        for (int i = 0; i < drivetrainMotors.size(); i++) {
+            drivetrainMotors.get(i).setPower(motorPowers[i]);
         }
     }
 
@@ -117,8 +224,11 @@ public abstract class Drivetrain {
      * TODO: documentation
      */
     public void resetMotors() {
-        for (int i = 0; i < motors.size(); i++) {
-            motors.get(i).setPower(0);
+//        for (int i = 0; i < motors.size(); i++) {
+//            motors.get(i).setPower(0);
+//        }
+        for (int i = 0; i < drivetrainMotors.size(); i++) {
+            drivetrainMotors.get(i).setPower(0);
         }
     }
 }

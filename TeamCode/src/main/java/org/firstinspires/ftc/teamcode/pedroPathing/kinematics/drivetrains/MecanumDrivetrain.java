@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
@@ -68,32 +69,45 @@ public class MecanumDrivetrain extends Drivetrain {
                 new Vector(copiedFrontLeftVector.getMagnitude(), 2*Math.PI-copiedFrontLeftVector.getTheta()),
                 new Vector(copiedFrontLeftVector.getMagnitude(), copiedFrontLeftVector.getTheta())};
 
+        separateVectors = 2;
+
         this.hardwareMap = hardwareMap;
 //        initialize();
     }
 
     @Override
     public void initialize() {
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-        leftFront.setDirection(leftFrontMotorDirection);
-        leftRear.setDirection(leftRearMotorDirection);
-        rightFront.setDirection(rightFrontMotorDirection);
-        rightRear.setDirection(rightRearMotorDirection);
+//        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
+//        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
+//        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
+//        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
+//        leftFront.setDirection(leftFrontMotorDirection);
+//        leftRear.setDirection(leftRearMotorDirection);
+//        rightFront.setDirection(rightFrontMotorDirection);
+//        rightRear.setDirection(rightRearMotorDirection);
+//
+//        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
+//
+//        for (DcMotorEx motor : motors) {
+//            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
+//            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
+//            motor.setMotorType(motorConfigurationType);
+//
+//            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        }
+        drivetrainMotors = Arrays.asList(hardware.motors.leftFront, hardware.motors.rightFront, hardware.motors.leftBack, hardware.motors.rightBack);
+        for (hardware.motors motor : drivetrainMotors) {
+            motor.initMotor(hardwareMap);
+        }
 
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
+        for (hardware.motors motor : drivetrainMotors) {
+            MotorConfigurationType motorConfigurationType = motor.dcMotorEx.getMotorType().clone();
             motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
+            motor.dcMotorEx.setMotorType(motorConfigurationType);
 
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
     }
-
 
     @Override
     public double[] getDrivePowers(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
@@ -145,6 +159,45 @@ public class MecanumDrivetrain extends Drivetrain {
         //[STT] no idea why this is. Maybe because of the multiplication later.
         truePathingVectors[0] = MathFunctions.scalarMultiplyVector(truePathingVectors[0], 2.0);
         truePathingVectors[1] = MathFunctions.scalarMultiplyVector(truePathingVectors[1], 2.0);
+
+        for (int i = 0; i < mecanumVectorsCopy.length; i++) {
+            // this copies the vectors from mecanumVectors but creates new references for them
+            mecanumVectorsCopy[i] = MathFunctions.copyVector(mecanumVectors[i]);
+
+            mecanumVectorsCopy[i].rotateVector(robotHeading);
+        }
+
+        wheelPowers[0] = (mecanumVectorsCopy[1].getXComponent()*truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent()*mecanumVectorsCopy[1].getYComponent()) / (mecanumVectorsCopy[1].getXComponent()*mecanumVectorsCopy[0].getYComponent() - mecanumVectorsCopy[0].getXComponent()*mecanumVectorsCopy[1].getYComponent());
+        wheelPowers[1] = (mecanumVectorsCopy[0].getXComponent()*truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent()*mecanumVectorsCopy[0].getYComponent()) / (mecanumVectorsCopy[0].getXComponent()*mecanumVectorsCopy[1].getYComponent() - mecanumVectorsCopy[1].getXComponent()*mecanumVectorsCopy[0].getYComponent());
+        wheelPowers[2] = (mecanumVectorsCopy[3].getXComponent()*truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent()*mecanumVectorsCopy[3].getYComponent()) / (mecanumVectorsCopy[3].getXComponent()*mecanumVectorsCopy[2].getYComponent() - mecanumVectorsCopy[2].getXComponent()*mecanumVectorsCopy[3].getYComponent());
+        wheelPowers[3] = (mecanumVectorsCopy[2].getXComponent()*truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent()*mecanumVectorsCopy[2].getYComponent()) / (mecanumVectorsCopy[2].getXComponent()*mecanumVectorsCopy[3].getYComponent() - mecanumVectorsCopy[3].getXComponent()*mecanumVectorsCopy[2].getYComponent());
+
+        double wheelPowerMax = Math.max(Math.max(Math.abs(wheelPowers[0]), Math.abs(wheelPowers[1])), Math.max(Math.abs(wheelPowers[2]), Math.abs(wheelPowers[3])));
+        if (wheelPowerMax > maxPowerScaling) {
+            wheelPowers[0] /= wheelPowerMax;
+            wheelPowers[1] /= wheelPowerMax;
+            wheelPowers[2] /= wheelPowerMax;
+            wheelPowers[3] /= wheelPowerMax;
+        }
+
+        return wheelPowers;
+    }
+
+    @Override
+    public Vector[] applyHeadingVectors(Vector vector, Vector headingPower) {
+        Vector[] vectorsWithHeading = new Vector[2];
+        vectorsWithHeading[0] = MathFunctions.subtractVectors(vector, headingPower);
+        vectorsWithHeading[1] = MathFunctions.addVectors(vector, headingPower);
+        return vectorsWithHeading;
+    }
+    @Override
+    public double[] calculateMotorPowers(Vector[] truePathingVectors) {
+        truePathingVectors[0] = MathFunctions.scalarMultiplyVector(truePathingVectors[0], 2.0);
+        truePathingVectors[1] = MathFunctions.scalarMultiplyVector(truePathingVectors[1], 2.0);
+
+        double [] wheelPowers = new double[4];
+
+        Vector[] mecanumVectorsCopy = new Vector[4];
 
         for (int i = 0; i < mecanumVectorsCopy.length; i++) {
             // this copies the vectors from mecanumVectors but creates new references for them
