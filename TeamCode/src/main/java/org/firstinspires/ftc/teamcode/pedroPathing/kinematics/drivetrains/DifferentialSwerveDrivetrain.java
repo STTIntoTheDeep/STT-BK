@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
@@ -16,23 +15,23 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * This is the DifferentialSwerveDrivetrain class, based off Pedro-Pathings DriveVectorScaler class. This class takes in inputs Vectors for driving, heading
+ * This is the DifferentialSwerveDrivetrain class, based off Pedro-Pathing's DriveVectorScaler class. This class takes in inputs Vectors for driving, heading
  * correction, and translational/centripetal correction is able to run the motors for a two-pod, three-pod or four-pod differential swerve drivetrain.
  *
  * @author Dean van Beek - 3977 Stanislas Tech Team
- * @version 0.5, 26/12/2024 (Happy Christmas)
+ * @version 1.0, 27/12/2024
  */
 public class DifferentialSwerveDrivetrain extends Drivetrain {
     HardwareMap hardwareMap;
 
-    //TODO: test really quickly that final didn't break anything.
     private final List<DifferentialSwervePod> pods;
+    private List<DcMotorEx> sensors;
 
     /**
-     * This creates a new TwoPodDifferentialSwerveDrivetrain, which takes in various movement vectors and outputs
+     * This creates a new DifferentialSwerveDrivetrain, which takes in various movement vectors and outputs
      * the wheel drive powers necessary to move in the intended direction, given the true movement
-     * vector for the front left mecanum wheel.
-     * @param hardwareMap
+     * vector for the front left mecanum wheel. It also <a href="#initialize()">initializes</a> the hardware.
+     * @param hardwareMap the HardwareMap required for initialization.
      * @param pods has to contain at least two pods
      */
     public DifferentialSwerveDrivetrain(HardwareMap hardwareMap, DifferentialSwervePod ... pods) {
@@ -42,26 +41,25 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
         initialize();
     }
 
+    // For documentation on @Override methods, see Drivetrain.java
     @Override
     public void initialize() {
-//        DcMotorEx leftFrontTop = hardwareMap.get(DcMotorEx.class, "blue_front");
-//        DcMotorEx leftFrontBottom = hardwareMap.get(DcMotorEx.class, "blue_back");
-//        DcMotorEx rightFrontTop = hardwareMap.get(DcMotorEx.class, "red_front");
-//        DcMotorEx rightFrontBottom = hardwareMap.get(DcMotorEx.class, "red_back");
-//        leftFrontTop.setDirection(DcMotorSimple.Direction.REVERSE);
-//        leftFrontBottom.setDirection(DcMotorSimple.Direction.FORWARD);
-//        rightFrontTop.setDirection(DcMotorSimple.Direction.REVERSE);
-//        rightFrontBottom.setDirection(DcMotorSimple.Direction.FORWARD);
-//
-//        motors = Arrays.asList(leftFrontTop, leftFrontBottom, rightFrontBottom, rightFrontTop);
         drivetrainMotors = Arrays.asList(hardware.motors.leftFront, hardware.motors.rightFront, hardware.motors.leftBack, hardware.motors.rightBack);
         for (hardware.motors motor : drivetrainMotors) {
             motor.initMotor(hardwareMap);
+            motor.initPedro();
+        }
+
+        //TODO: see if this works with actual encoders
+        sensors = Arrays.asList(hardware.motors.rightFront.dcMotorEx, hardware.motors.rightBack.dcMotorEx);
+        for (DcMotorEx sensor : sensors) {
+            sensor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            sensor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         //only necessary for three or four pod drivetrains
         if (pods.size() >= 3) {
-            //TODO: change if drivetrainMotors works
+            //TODO: change if enum drivetrainMotors works
             DcMotorEx leftBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
             DcMotorEx leftBackBottom = hardwareMap.get(DcMotorEx.class, FollowerConstants.backLeftFrontMotorName);
             leftBackTop.setDirection(FollowerConstants.backLeftFrontMotorDirection);
@@ -69,6 +67,7 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
 
             motors.add(leftBackTop);
             motors.add(leftBackBottom);
+            sensors.add(leftBackBottom);
         }
         if (pods.size() >= 4) {
             DcMotorEx rightBackTop = hardwareMap.get(DcMotorEx.class, FollowerConstants.backRightFrontMotorName);
@@ -78,16 +77,16 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
 
             motors.add(rightBackTop);
             motors.add(rightBackBottom);
+            sensors.add(rightBackBottom);
         }
 
 //        for (DcMotorEx motor : motors) {
-        for (hardware.motors motor : drivetrainMotors) {
-            MotorConfigurationType motorConfigurationType = motor.dcMotorEx.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.dcMotorEx.setMotorType(motorConfigurationType);
-
-            motor.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
+//            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
+//            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
+//            motor.setMotorType(motorConfigurationType);
+//
+//            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        }
 
         Point[] podPositions = new Point[pods.size()];
 
@@ -138,6 +137,7 @@ public class DifferentialSwerveDrivetrain extends Drivetrain {
         double[] motorPowers = new double[drivetrainMotors.size()];
         // this bit is different then MecanumDrivetrain, as you have to calculate powers for the pods
         for (int i = 0; i < pods.size(); i++) {
+            pods.get(i).setPosition(sensors.get(i).getCurrentPosition());
             double[] podPowers = pods.get(i).calculateMotorPowers(truePathingVectors[i]);
             motorPowers[2 * i] = podPowers[0];
             motorPowers[2 * i + 1] = podPowers[1];

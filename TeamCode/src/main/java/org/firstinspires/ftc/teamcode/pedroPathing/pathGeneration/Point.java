@@ -29,7 +29,7 @@ public class Point {
     public static final int POLAR = 0;
     //Cartesian with 0,0 means in the middle of the field, as seen in the Pedro-Pathing visualizer.
     public static final int CARTESIAN = 1;
-    //Cartesian with 0,0 means in the TODO: red alliance corner, as seen in the RTF visualizer.
+    //Cartesian with 0,0 means in the TODO: red alliance corner?, as seen in the RTF visualizer.
     public static final int RTF = 2;
 
 

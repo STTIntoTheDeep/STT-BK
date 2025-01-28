@@ -1,14 +1,5 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -27,7 +18,7 @@ import java.util.Arrays;
  * This is the MecanumDrivetrain class, based off Pedro-Pathings DriveVectorScaler class. This class takes in inputs Vectors for driving, heading
  * correction, and translational/centripetal correction and returns an array with wheel powers for a four wheel (four motor) mecanum drivetrain.
  * This also includes a bunch of deprecated STT TeleOp drive methods, which should be replaced with Pedro Pathings TeleOp Enhancements.
- *
+ * TODO: replace
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
@@ -41,8 +32,6 @@ public class MecanumDrivetrain extends Drivetrain {
 
     // This is ordered left front, left back, right front, right back. These are also normalized.
     private final Vector[] mecanumVectors;
-
-    int j;
 
     final double angle = FollowerConstants.frontLeftVector.getTheta();
 
@@ -59,7 +48,8 @@ public class MecanumDrivetrain extends Drivetrain {
     /**
      * This creates a new DriveVectorScaler, which takes in various movement vectors and outputs
      * the wheel drive powers necessary to move in the intended direction, given the true movement
-     * vector for the front left mecanum wheel.
+     * vector for the front left mecanum wheel. It also <a href="#initialize()">initializes</a> the hardware.
+     * @param hardwareMap the HardwareMap required for initialization.
      */
     public MecanumDrivetrain(HardwareMap hardwareMap) {
         Vector copiedFrontLeftVector = MathFunctions.normalizeVector(FollowerConstants.frontLeftVector);
@@ -69,43 +59,22 @@ public class MecanumDrivetrain extends Drivetrain {
                 new Vector(copiedFrontLeftVector.getMagnitude(), 2*Math.PI-copiedFrontLeftVector.getTheta()),
                 new Vector(copiedFrontLeftVector.getMagnitude(), copiedFrontLeftVector.getTheta())};
 
+        // Mecanum only requires two separate vectors for 4 wheels, because this is only necessary for the rotate vectors,
+        // and that is just left backwards, right forwards. leftFrontPower and leftBackPower are different because of the mecanum
+        // wheel orientation, but that is covered by mecanumVectors at the end.
         separateVectors = 2;
 
         this.hardwareMap = hardwareMap;
-//        initialize();
+        initialize();
     }
 
+    // For documentation on @Override methods, see Drivetrain.java
     @Override
     public void initialize() {
-//        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-//        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-//        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-//        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-//        leftFront.setDirection(leftFrontMotorDirection);
-//        leftRear.setDirection(leftRearMotorDirection);
-//        rightFront.setDirection(rightFrontMotorDirection);
-//        rightRear.setDirection(rightRearMotorDirection);
-//
-//        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-//
-//        for (DcMotorEx motor : motors) {
-//            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-//            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-//            motor.setMotorType(motorConfigurationType);
-//
-//            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        }
-        drivetrainMotors = Arrays.asList(hardware.motors.leftFront, hardware.motors.rightFront, hardware.motors.leftBack, hardware.motors.rightBack);
+        drivetrainMotors = Arrays.asList(hardware.motors.leftFront, hardware.motors.leftBack, hardware.motors.rightFront, hardware.motors.rightBack);
         for (hardware.motors motor : drivetrainMotors) {
             motor.initMotor(hardwareMap);
-        }
-
-        for (hardware.motors motor : drivetrainMotors) {
-            MotorConfigurationType motorConfigurationType = motor.dcMotorEx.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.dcMotorEx.setMotorType(motorConfigurationType);
-
-            motor.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.initPedro();
         }
     }
 
@@ -156,7 +125,7 @@ public class MecanumDrivetrain extends Drivetrain {
                 }
             }
         }
-        //[STT] no idea why this is. Maybe because of the multiplication later.
+        // [STT] no idea why this is. Maybe because of the multiplication later.
         truePathingVectors[0] = MathFunctions.scalarMultiplyVector(truePathingVectors[0], 2.0);
         truePathingVectors[1] = MathFunctions.scalarMultiplyVector(truePathingVectors[1], 2.0);
 
@@ -206,6 +175,7 @@ public class MecanumDrivetrain extends Drivetrain {
             mecanumVectorsCopy[i].rotateVector(robotHeading);
         }
 
+        // [STT] I don't understand this.
         wheelPowers[0] = (mecanumVectorsCopy[1].getXComponent()*truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent()*mecanumVectorsCopy[1].getYComponent()) / (mecanumVectorsCopy[1].getXComponent()*mecanumVectorsCopy[0].getYComponent() - mecanumVectorsCopy[0].getXComponent()*mecanumVectorsCopy[1].getYComponent());
         wheelPowers[1] = (mecanumVectorsCopy[0].getXComponent()*truePathingVectors[0].getYComponent() - truePathingVectors[0].getXComponent()*mecanumVectorsCopy[0].getYComponent()) / (mecanumVectorsCopy[0].getXComponent()*mecanumVectorsCopy[1].getYComponent() - mecanumVectorsCopy[1].getXComponent()*mecanumVectorsCopy[0].getYComponent());
         wheelPowers[2] = (mecanumVectorsCopy[3].getXComponent()*truePathingVectors[1].getYComponent() - truePathingVectors[1].getXComponent()*mecanumVectorsCopy[3].getYComponent()) / (mecanumVectorsCopy[3].getXComponent()*mecanumVectorsCopy[2].getYComponent() - mecanumVectorsCopy[2].getXComponent()*mecanumVectorsCopy[3].getYComponent());
@@ -222,6 +192,7 @@ public class MecanumDrivetrain extends Drivetrain {
         return wheelPowers;
     }
 
+    //TODO: remove everything below this point if getDrivePowers() or run() works in TeleOp.
     @Deprecated
     public void init(HardwareMap map) {
         leftFront = map.get(DcMotorEx.class, "left_front");
@@ -406,14 +377,5 @@ public class MecanumDrivetrain extends Drivetrain {
         leftRear.setPower(motorPowers[1]);
         rightFront.setPower(motorPowers[2]);
         rightRear.setPower(motorPowers[3]);
-    }
-    @Override
-    public void setMotors() {
-        // Motor powers are sent to the motors.
-        j = 0;
-        for (DcMotorEx motor : new DcMotorEx[]{leftFront, leftRear, rightFront, rightRear}) {
-            motor.setPower(motorPowers[j]);
-            j++;
-        }
     }
 }

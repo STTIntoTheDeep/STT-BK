@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 
 /**
  * TODO: documentation
+ * This is only a math class, it doesn't write to the motors itself.
  *
  * @author Dean van Beek - 3977 Stanislas Tech Team
  * @version 1.0, 25/12/2024 (Happy Christmas)
@@ -22,8 +23,9 @@ public class DifferentialSwervePod {
     double theta = 0, r, rotatePower, currentAngle, targetAngle, maxPower;
 
     // Note: position is in ticks, and TPR converts to rotations (not radians)
-    private final double TICKS_PER_ROTATION = 8192,//TODO: change
-    encoderGearRatio = 1.0;
+    //TODO: something something absolute encoder this should be in FollowerConstants.java
+    private final double TICKS_PER_ROTATION = 8192;//TODO: change
+    private double encoderGearRatio = 1.0;
 
     private final CustomPIDFCoefficients podPIDFCoefficients = new CustomPIDFCoefficients(
             1.0,
@@ -33,14 +35,10 @@ public class DifferentialSwervePod {
 
     private PIDFController podPIDF = new PIDFController(podPIDFCoefficients);
 
-    DcMotorEx sensor;
-
     /** TODO documentation
+     * With only two pods the distance of the point doesn't matter, only the angle.
      */
-    public DifferentialSwervePod(Point location, DcMotorEx sensor) {
-        setLocation(location);
-        this.sensor = sensor;
-    }
+    public DifferentialSwervePod(Point location) {setLocation(location);}
 
     /** TODO: documentation
      *  pod with no location means location (0,0)
@@ -70,7 +68,6 @@ public class DifferentialSwervePod {
         double[] motorPowers = new double[2];
 
         theta = input.getTheta();
-        position = sensor.getCurrentPosition();
 
         currentAngle = MathFunctions.normalizeAngle(position / TICKS_PER_ROTATION * 2 * Math.PI);
 
@@ -137,6 +134,11 @@ public class DifferentialSwervePod {
 
     /**
      * TODO: documentation
+     * @param position
+     */
+    public void setPosition(int position) {this.position = position;}
+    /**
+     * TODO: documentation
      * @return position in ticks
      */
     public int getPosition() {return position;}
@@ -145,4 +147,10 @@ public class DifferentialSwervePod {
      * TODO: documentation
      */
     public void resetPIDF() {podPIDF.reset();}
+
+    /**
+     * TODO: documentation
+     * @param
+     */
+    public void setEncoderGearRatio(double ratio) {encoderGearRatio = ratio;}
 }

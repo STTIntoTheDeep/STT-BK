@@ -20,19 +20,18 @@ import java.util.List;
 public abstract class Drivetrain {
     public List<DcMotorEx> motors;
 
-    //TODO: remove if this causes an NPE
     public List<hardware.motors> drivetrainMotors;
     private double[] motorPowers;
     protected double maxPowerScaling = 1, robotHeading;
     protected int separateVectors;
 
     /**
-     * TODO: documentation
+     * This method initializes the hardware necessary for the Drivetrain. It specifically initializes all the motors and adds them to a List.
      */
     public abstract void initialize();
 
     /**
-     *
+     * TODO: documentation
      * @param correctivePower
      * @param headingPower
      * @param pathingPower
@@ -40,7 +39,7 @@ public abstract class Drivetrain {
      */
     public void run(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
         //FIXME
-        //TODO: test in IntelliJ that sets the same motor powers as getDrivePowers outputs.
+        //TODO: test in IntelliJ that sets the same motor powers as getDrivePowers outputs for MecanumDrivetrain.
 
         // clamps down the magnitudes of the input vectors
         if (correctivePower.getMagnitude() > maxPowerScaling) correctivePower.setMagnitude(maxPowerScaling);
@@ -61,6 +60,8 @@ public abstract class Drivetrain {
     }
 
     /**
+     * [NOTE]: This is a separate function so it can return when the vectors are done, instead of having a lot
+     * of nested else-statements.
      * TODO: documentation
      * @param correctivePower this Vector includes the centrifugal force scaling Vector as well as a
      *                        translational power Vector to correct onto the Bézier curve the Follower

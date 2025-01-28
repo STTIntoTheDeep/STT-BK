@@ -292,8 +292,7 @@ public class Path {
      * @return returns if at end.
      */
     public boolean isAtParametricEnd() {
-        if (closestPointTValue >= pathEndTValueConstraint) return true;
-        return false;
+        return closestPointTValue >= pathEndTValueConstraint;
     }
 
     /**
@@ -302,8 +301,7 @@ public class Path {
      * @return returns if at start.
      */
     public boolean isAtParametricStart() {
-        if (closestPointTValue <= 1- pathEndTValueConstraint) return true;
-        return false;
+        return closestPointTValue <= 1 - pathEndTValueConstraint;
     }
 
     /**

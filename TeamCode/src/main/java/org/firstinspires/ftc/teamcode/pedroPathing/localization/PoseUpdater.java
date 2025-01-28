@@ -200,10 +200,8 @@ public class PoseUpdater {
     public Pose getPose() {
         if (currentPose == null) {
             currentPose = localizer.getPose();
-            return applyOffset(currentPose);
-        } else {
-            return applyOffset(currentPose);
         }
+        return applyOffset(currentPose);
     }
 
     /**
@@ -216,10 +214,8 @@ public class PoseUpdater {
     public Pose getRawPose() {
         if (currentPose == null) {
             currentPose = localizer.getPose();
-            return currentPose;
-        } else {
-            return currentPose;
         }
+        return currentPose;
     }
 
     /**
@@ -265,10 +261,8 @@ public class PoseUpdater {
 //            currentVelocity.setOrthogonalComponents(getPose().getX() - previousPose.getX(), getPose().getY() - previousPose.getY());
 //            currentVelocity.setMagnitude(MathFunctions.distance(getPose(), previousPose) / ((currentPoseTime - previousPoseTime) / Math.pow(10.0, 9)));
             currentVelocity = localizer.getVelocityVector();
-            return MathFunctions.copyVector(currentVelocity);
-        } else {
-            return MathFunctions.copyVector(currentVelocity);
         }
+        return MathFunctions.copyVector(currentVelocity);
     }
 
     /**
@@ -291,10 +285,8 @@ public class PoseUpdater {
         if (currentAcceleration == null) {
             currentAcceleration = MathFunctions.subtractVectors(getVelocity(), previousVelocity);
             currentAcceleration.setMagnitude(currentAcceleration.getMagnitude() / ((currentPoseTime - previousPoseTime) / Math.pow(10.0, 9)));
-            return MathFunctions.copyVector(currentAcceleration);
-        } else {
-            return MathFunctions.copyVector(currentAcceleration);
         }
+        return MathFunctions.copyVector(currentAcceleration);
     }
 
     /**

@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Encoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Localizer;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Matrix;
@@ -41,7 +42,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.NanoTimer;
  */
 @Config
 public class ThreeWheelLocalizer extends Localizer {
-    private HardwareMap hardwareMap;
     private Pose startPose;
     private Pose displacementPose;
     private Pose currentVelocity;
@@ -81,11 +81,9 @@ public class ThreeWheelLocalizer extends Localizer {
         rightEncoderPose = new Pose(-1.476, -4.488, 0);
         strafeEncoderPose = new Pose(4.567, 0, Math.toRadians(90));
 
-        hardwareMap = map;
-
-        leftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "right_front"));
-        rightEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "left_back"));
-        strafeEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "right_back"));
+        leftEncoder = new Encoder(map.get(DcMotorEx.class, hardware.motors.hook.getName()));
+        rightEncoder = new Encoder(map.get(DcMotorEx.class, hardware.motors.leftBack.getName()));
+        strafeEncoder = new Encoder(map.get(DcMotorEx.class, hardware.motors.rightFront.getName()));
 
         leftEncoder.setDirection(Encoder.REVERSE);
         rightEncoder.setDirection(Encoder.FORWARD);

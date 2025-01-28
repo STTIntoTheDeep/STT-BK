@@ -518,18 +518,19 @@ public class Follower {
                 }
             }
         } else {
-            velocities.add(poseUpdater.getVelocity());
-            velocities.remove(velocities.get(velocities.size() - 1));
-
-            calculateAveragedVelocityAndAcceleration();
-
-            drivePowers = drivetrain.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().getHeading());
-
-            //TODO: delete if the other thing works
-            for (int i = 0; i < motors.size(); i++) {
-                motors.get(i).setPower(drivePowers[i]);
-            }
-//            drivetrain.setDrivePowers(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
+//            velocities.add(poseUpdater.getVelocity());
+//            velocities.remove(velocities.get(velocities.size() - 1));
+//
+//            calculateAveragedVelocityAndAcceleration();
+//
+//            drivePowers = drivetrain.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().getHeading());
+//
+//            TODO: delete if the other thing works
+//            for (int i = 0; i < motors.size(); i++) {
+//                motors.get(i).setPower(drivePowers[i]);
+//            }
+            //FIXME field centric
+            drivetrain.run(new Vector(0,0), new Vector(teleopDriveValues[2],0), teleopDriveVector, 0);
         }
     }
 

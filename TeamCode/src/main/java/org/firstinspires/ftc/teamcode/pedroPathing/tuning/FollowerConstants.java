@@ -31,7 +31,7 @@ public class FollowerConstants {
 
     public static int numberOfMotors = 4;
 
-    //TODO enumerator?
+    //TODO transfer this to the enumerator hardware.java if that works
 
     // This section is for configuring your motors.
     public static String leftFrontMotorName = "left_front"; //leftFrontTop
