@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 public class hardware {
     //TODO: test if all these this.xxx are necessary
 
-    public static boolean reduceHardwareCalls = true;
+    public static boolean reduceHardwareCalls = false;
 
     /**
      * This enumerator contains all the motors, preferably in the order of their hardware ports.
@@ -70,6 +70,7 @@ public class hardware {
         motors(String name) {this(name, DcMotorSimple.Direction.FORWARD, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);}
 
         // these are the variables each motors() has.
+        //TODO: make function getCurrentPos and private the motor.
         public DcMotorEx dcMotorEx;
 
         private final String name;

@@ -16,10 +16,10 @@
         <LynxModule name="Expansion Hub 2" port="2">
 
             <!--These are the Expansion Hub's motors. Change the ports and names of your motors.-->
-            <goBILDA5201SeriesMotor name="hook" port="0"/>
-            <goBILDA5201SeriesMotor name="intake" port="1"/>
-            <goBILDA5201SeriesMotor name="outtakeLeft" port="2"/>
-            <goBILDA5201SeriesMotor name="outtakeRight" port="3"/>
+            <goBILDA5201SeriesMotor name="left_front" port="0"/>
+            <goBILDA5201SeriesMotor name="hook" port="1"/>
+            <goBILDA5201SeriesMotor name="left_back" port="2"/>
+            <goBILDA5201SeriesMotor name="outtakeLeft" port="3"/>
 
             <!--These are the Expansion Hub's servos. Change the ports and names of your servos.-->
             <Servo name="intake" port="0"/>
@@ -36,9 +36,9 @@
         <LynxModule name="Control Hub" port="173">
 
             <!--These are the Control Hub's motors. Change the ports and names of your motors.-->
-            <goBILDA5201SeriesMotor name="left_front" port="0"/>
-            <goBILDA5201SeriesMotor name="right_back" port="1"/>
-            <goBILDA5201SeriesMotor name="left_back" port="2"/>
+            <goBILDA5201SeriesMotor name="right_back" port="0"/>
+            <goBILDA5201SeriesMotor name="intake" port="1"/>
+            <goBILDA5201SeriesMotor name="outtakeRight" port="2"/>
             <goBILDA5201SeriesMotor name="right_front" port="3"/>
 
             <!--These are the Control Hub's servos. Change the ports and names of your servos.-->
