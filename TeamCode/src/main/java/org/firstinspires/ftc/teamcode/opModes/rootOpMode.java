@@ -12,6 +12,10 @@ import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathBuilder;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -47,6 +51,7 @@ public abstract class rootOpMode extends LinearOpMode {
     Scalar desiredColor = SampleDetectionPipeline.YELLOW;
     Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
+    protected PathBuilder builder = new PathBuilder();
     /**
      * TODO: documentation
      * @param TeleOp
@@ -89,6 +94,14 @@ public abstract class rootOpMode extends LinearOpMode {
 
         if (!TeleOp) return;
         follower.startTeleopDrive();
+        builder.addPath(
+        // Line 1
+            new BezierLine(
+                new Point(8.072, 55.725, Point.CARTESIAN),
+                new Point(41.143, 69.266, Point.CARTESIAN)
+            ))
+        .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0));
+
     }
 
     /**

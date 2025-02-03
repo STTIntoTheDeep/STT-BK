@@ -66,9 +66,9 @@ public class ThreeWheelLocalizer extends Localizer {
      * @param map the HardwareMap
      */
     public ThreeWheelLocalizer(HardwareMap map) {
-        this(map, new Pose());
+        this(map, new Pose(0,0,0));
     }
-
+    //TODO: starting pose veranderen
     /**
      * This creates a new ThreeWheelLocalizer from a HardwareMap and a Pose, with the Pose
      * specifying the starting pose of the localizer.
