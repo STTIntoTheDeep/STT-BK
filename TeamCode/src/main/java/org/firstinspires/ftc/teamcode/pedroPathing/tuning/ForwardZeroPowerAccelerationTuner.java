@@ -1,31 +1,22 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tuning;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.hardware;
+import org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This is the ForwardZeroPowerAccelerationTuner autonomous tuning OpMode. This runs the robot
@@ -42,16 +33,13 @@ import java.util.List;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/13/2024
  */
+//TODO: documentation
 @Config
 @Autonomous(name = "Forward Zero Power Acceleration Tuner", group = "Autonomous Pathing Tuning")
 public class ForwardZeroPowerAccelerationTuner extends OpMode {
-    private ArrayList<Double> accelerations = new ArrayList<>();
+    private final ArrayList<Double> accelerations = new ArrayList<>();
 
-    private DcMotorEx leftFront;
-    private DcMotorEx leftRear;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightRear;
-    private List<DcMotorEx> motors;
+    Drivetrain drivetrain;
 
     private PoseUpdater poseUpdater;
 
@@ -71,28 +59,8 @@ public class ForwardZeroPowerAccelerationTuner extends OpMode {
      */
     @Override
     public void init() {
+        drivetrain = new MecanumDrivetrain(hardwareMap);
         poseUpdater = new PoseUpdater(hardwareMap);
-
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-        leftFront.setDirection(leftFrontMotorDirection);
-        leftRear.setDirection(leftRearMotorDirection);
-        rightFront.setDirection(rightFrontMotorDirection);
-        rightRear.setDirection(rightRearMotorDirection);
-
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
-        }
-
-        for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("The robot will run forward until it reaches " + VELOCITY + " inches per second.");
@@ -108,10 +76,8 @@ public class ForwardZeroPowerAccelerationTuner extends OpMode {
      */
     @Override
     public void start() {
-        leftFront.setPower(1);
-        leftRear.setPower(1);
-        rightFront.setPower(1);
-        rightRear.setPower(1);
+        drivetrain.stopMotors();
+        drivetrain.run(new Vector(1,0),0);
     }
 
     /**
@@ -123,10 +89,11 @@ public class ForwardZeroPowerAccelerationTuner extends OpMode {
     @Override
     public void loop() {
         if (gamepad1.cross || gamepad1.a) {
-            for (DcMotorEx motor : motors) {
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                motor.setPower(0);
-            }
+            drivetrain.stopMotors();
+            hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             requestOpModeStop();
         }
 
@@ -138,13 +105,15 @@ public class ForwardZeroPowerAccelerationTuner extends OpMode {
                     previousVelocity = MathFunctions.dotProduct(poseUpdater.getVelocity(), heading);
                     previousTimeNano = System.nanoTime();
                     stopping = true;
-                    for (DcMotorEx motor : motors) {
-                        motor.setPower(0);
-                    }
+                    drivetrain.stopMotors();
+                    hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                    hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 }
             } else {
                 double currentVelocity = MathFunctions.dotProduct(poseUpdater.getVelocity(), heading);
-                accelerations.add((currentVelocity - previousVelocity) / ((System.nanoTime() - previousTimeNano) / Math.pow(10.0, 9)));
+                accelerations.add((currentVelocity - previousVelocity) / ((System.nanoTime() - previousTimeNano) / (10.0E9)));
                 previousVelocity = currentVelocity;
                 previousTimeNano = System.nanoTime();
                 if (currentVelocity < FollowerConstants.pathEndVelocityConstraint) {
@@ -156,7 +125,7 @@ public class ForwardZeroPowerAccelerationTuner extends OpMode {
             for (Double acceleration : accelerations) {
                 average += acceleration;
             }
-            average /= (double) accelerations.size();
+            average /= accelerations.size();
 
             telemetryA.addData("forward zero power acceleration (deceleration):", average);
             telemetryA.update();

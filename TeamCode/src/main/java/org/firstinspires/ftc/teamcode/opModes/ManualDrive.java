@@ -5,11 +5,10 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 
-@TeleOp(name = "SoloDrive",group = "TeleOp")
-public class SoloDrive extends rootOpMode {
+@TeleOp(name = "ManualDrive",group = "TeleOp")
+public class ManualDrive extends rootOpMode {
     boolean specimenMode = true, high, goDown = false;
     int rumbleStates, ledStates;
 

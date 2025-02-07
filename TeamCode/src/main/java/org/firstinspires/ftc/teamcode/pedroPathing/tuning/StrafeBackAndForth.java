@@ -26,8 +26,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
  * @version 1.0, 3/12/2024
  */
 @Config
-@Autonomous (name = "Straight Back And Forth", group = "Autonomous Pathing Tuning")
-public class StraightBackAndForth extends OpMode {
+@Autonomous (name = "Strafe Back And Forth", group = "Autonomous Pathing Tuning")
+public class StrafeBackAndForth extends OpMode {
     private Telemetry telemetryA;
 
     public static double DISTANCE = 40;
@@ -36,8 +36,8 @@ public class StraightBackAndForth extends OpMode {
 
     private Follower follower;
 
-    private Path forwards;
-    private Path backwards;
+    private Path left;
+    private Path right;
 
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
@@ -47,12 +47,12 @@ public class StraightBackAndForth extends OpMode {
     public void init() {
         follower = new Follower(hardwareMap);
 
-        forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
-        forwards.setConstantHeadingInterpolation(0);
-        backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
-        backwards.setConstantHeadingInterpolation(0);
+        left = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(0,DISTANCE, Point.CARTESIAN)));
+        left.setConstantHeadingInterpolation(0);
+        right = new Path(new BezierLine(new Point(0,DISTANCE, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
+        right.setConstantHeadingInterpolation(0);
 
-        follower.followPath(forwards);
+        follower.followPath(left);
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
@@ -71,10 +71,10 @@ public class StraightBackAndForth extends OpMode {
         if (!follower.isBusy()) {
             if (forward) {
                 forward = false;
-                follower.followPath(backwards);
+                follower.followPath(right);
             } else {
                 forward = true;
-                follower.followPath(forwards);
+                follower.followPath(left);
             }
         }
 

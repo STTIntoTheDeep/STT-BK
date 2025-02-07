@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import java.util.List;
  * Note: Contrary to the Localizer, STT only added documentation here, since that carries over into implementations of the methods. DRY.
  *
  * @author Dean van Beek
- * @version 1.0, 24/12/2024
+ * @version 1.0, 31/01/2025
  */
 public abstract class Drivetrain {
     public List<DcMotorEx> motors;
@@ -28,7 +28,7 @@ public abstract class Drivetrain {
     /**
      * This method initializes the hardware necessary for the Drivetrain. It specifically initializes all the motors and adds them to a List.
      */
-    public abstract void initialize();
+    protected abstract void initialize();
 
     /**
      * TODO: documentation
@@ -38,9 +38,6 @@ public abstract class Drivetrain {
      * @param robotHeading
      */
     public void run(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
-        //FIXME
-        //TODO: test in IntelliJ that sets the same motor powers as getDrivePowers outputs for MecanumDrivetrain.
-
         // clamps down the magnitudes of the input vectors
         if (correctivePower.getMagnitude() > maxPowerScaling) correctivePower.setMagnitude(maxPowerScaling);
         if (headingPower.getMagnitude() > maxPowerScaling) headingPower.setMagnitude(maxPowerScaling);
@@ -58,6 +55,14 @@ public abstract class Drivetrain {
         motorPowers = calculateMotorPowers(truePathingVectors);
         setMotors();
     }
+
+    /**
+     * For robot centric TeleOp without centripetal force correction or testing opModes.
+     * @see /FIXME
+     * @param drive
+     * @param rotate
+     */
+    public void run(Vector drive, double rotate) {run(new Vector(0,0), new Vector(rotate,0), drive, rotate);}
 
     /**
      * [NOTE]: This is a separate function so it can return when the vectors are done, instead of having a lot
@@ -167,14 +172,12 @@ public abstract class Drivetrain {
     /**
      * This takes in two Vectors, one static and one variable, and returns the scaling factor that,
      * when multiplied to the variable Vector, results in magnitude of the sum of the static Vector
-     * and the scaled variable Vector being the max power scaling.
-     *
+     * and the scaled variable Vector being the max power scaling. <br/>
      * IMPORTANT NOTE: I did not intend for this to be used for anything other than the method above
      * this one in this class, so there will be errors if you input Vectors of length greater than maxPowerScaling,
      * and it will scale up the variable Vector if the magnitude of the sum of the two input Vectors
      * isn't greater than maxPowerScaling. So, just don't use this elsewhere. There's gotta be a better way to do
-     * whatever you're trying to do.
-     *
+     * whatever you're trying to do.<br/>
      * I know that this is used outside of this class, however, I created this method so I get to
      * use it if I want to. Also, it's only used once outside of the DriveVectorScaler class, and
      * it's used to scale Vectors, as intended.
@@ -213,9 +216,6 @@ public abstract class Drivetrain {
      * TODO: documentation
      */
     public void setMotors() {
-//        for (int i = 0; i < motors.size(); i++) {
-//            motors.get(i).setPower(motorPowers[i]);
-//        }
         for (int i = 0; i < drivetrainMotors.size(); i++) {
             drivetrainMotors.get(i).setPower(motorPowers[i]);
         }
@@ -224,10 +224,7 @@ public abstract class Drivetrain {
     /**
      * TODO: documentation
      */
-    public void resetMotors() {
-//        for (int i = 0; i < motors.size(); i++) {
-//            motors.get(i).setPower(0);
-//        }
+    public void stopMotors() {
         for (int i = 0; i < drivetrainMotors.size(); i++) {
             drivetrainMotors.get(i).setPower(0);
         }

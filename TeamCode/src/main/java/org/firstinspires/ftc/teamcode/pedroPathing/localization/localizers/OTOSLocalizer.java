@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Localizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 /**
  * This is the OTOSLocalizer class. This class extends the Localizer superclass and is a

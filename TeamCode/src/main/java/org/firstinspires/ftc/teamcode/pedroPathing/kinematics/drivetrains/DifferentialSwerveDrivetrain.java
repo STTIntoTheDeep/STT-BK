@@ -7,9 +7,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
-import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants;
 
 import java.util.Arrays;
 import java.util.List;

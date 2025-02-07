@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
+
 import java.util.ArrayList;
 
 /**

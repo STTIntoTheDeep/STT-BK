@@ -4,7 +4,7 @@
 //import com.qualcomm.robotcore.hardware.HardwareMap;
 //
 //import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-//import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+//import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 //
 //import java.util.ArrayList;
 //import java.util.List;

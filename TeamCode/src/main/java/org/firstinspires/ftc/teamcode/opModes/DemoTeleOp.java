@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.List;
 

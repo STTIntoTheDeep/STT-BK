@@ -8,11 +8,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Localizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.NanoTimer;
-import org.opencv.core.Mat;
 
 /**
  * This is the Pinpoint class. This class extends the Localizer superclass and is a

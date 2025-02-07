@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 
 /**
  * This is the Circle autonomous OpMode. It runs the robot in a PathChain that's actually not quite

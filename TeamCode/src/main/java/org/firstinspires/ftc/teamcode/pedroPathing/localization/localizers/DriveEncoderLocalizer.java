@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.leftFrontMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.leftRearMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.rightFrontMotorName;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.rightRearMotorName;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -11,10 +11,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Encoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Localizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Matrix;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Matrix;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.NanoTimer;
 
 /**

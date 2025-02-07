@@ -4,64 +4,64 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Intake;
 import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
-import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathBuilder;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * TODO: documentation
  */
 public abstract class rootOpMode extends LinearOpMode {
-    Follower follower;
-    Intake intake;
-    Outtake outtake;
-    OpenCvCamera camera;
-    final SampleDetectionPipeline sampleDetectionPipeline = new SampleDetectionPipeline(false);
+    protected Follower follower;
+    protected Intake intake;
+    protected Outtake outtake;
+    protected OpenCvCamera camera;
+    protected final SampleDetectionPipeline samplePipeline = new SampleDetectionPipeline(true);
 
-    ArrayList<SampleDetectionPipeline.Sample> currentDetections;
-    double[] bestSampleInformation;
+    protected double[] bestSampleInformation;
 
-    protected enum intakeStates {IDLE, RELEASE, EXTEND, FIND, DOWN, MOVE, GRAB, CHECK, PRE_DONE, DONE, WRONG}
+    protected enum intakeStates {IDLE, EXTEND, FIND, ROTATE, DOWN, MOVE, GRAB, CHECK, PRE_DONE, DONE, WRONG}
     protected intakeStates intakeState = intakeStates.IDLE;
 
     protected enum transferStates{IDLE, UP, WAIT, DOWN, TRANSFER, PRE_DONE, DONE}
     protected transferStates transferState = transferStates.IDLE;
 
-    double intakeTimer, transferTimer, currentSlideCM = 0, transferDelay;
+    protected double intakeTimer, transferTimer, currentSlideCM = 0, transferDelay;
 
-    boolean TeleOp, changingMode;
+    protected boolean TeleOp, changingMode;
 
-    Scalar desiredColor = SampleDetectionPipeline.YELLOW;
-    Scalar allianceColor = SampleDetectionPipeline.BLUE;
+    protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
-    protected PathBuilder builder = new PathBuilder();
+    protected PathChain path1, path2, path3;
     /**
      * TODO: documentation
      * @param TeleOp
      */
     protected void initialize(boolean TeleOp) {
         this.TeleOp = TeleOp;
-        //TODO: follower
         follower = new Follower(hardwareMap);
+        hardware.reduceHardwareCalls = false;
         intake = new Intake(hardwareMap, TeleOp);
         outtake = new Outtake(hardwareMap, TeleOp);
+        hardware.reduceHardwareCalls = true;
+        hardware.motors.hook.initMotor(hardwareMap);
+        hardware.motors.hook.dcMotorEx.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         /*
             Sets the hubs to using BulkReads. Any read will read all non-I2C sensors from a hub at once.
@@ -72,36 +72,138 @@ public abstract class rootOpMode extends LinearOpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-
-        camera.setPipeline(sampleDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {camera.startStreaming(800,448, OpenCvCameraRotation.SIDEWAYS_LEFT);}
-
-            @Override
-            public void onError(int errorCode) {}
-        });
-        telemetry.setMsTransmissionInterval(25);
-
-        FtcDashboard.getInstance().startCameraStream(camera, 0);
-
         /*
             This line makes the telemetry available for FTC Dashboard by ACME Robotics.
          */
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetry.setMsTransmissionInterval(25);
 
-        if (!TeleOp) return;
-        follower.startTeleopDrive();
-        builder.addPath(
-        // Line 1
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.startStreaming(640,360, OpenCvCameraRotation.UPSIDE_DOWN);
+                camera.setPipeline(samplePipeline);
+            }
+
+            @Override
+            public void onError(int errorCode) {}
+        });
+        FtcDashboard.getInstance().startCameraStream(camera, 30);
+
+        if (!TeleOp) {
+            specimenPaths();
+            return;
+        }
+        wideCamera();
+        follower.startTeleOpDrive();
+    }
+
+    protected void specimenPaths() {
+        double scoreSpecimenX = 39.701;
+        Point specimenPickUp = new Point(8.455, 32.235, Point.CARTESIAN);
+
+        path1 = follower.pathBuilder().addPath(// Score first specimen
             new BezierLine(
-                new Point(8.072, 55.725, Point.CARTESIAN),
-                new Point(41.143, 69.266, Point.CARTESIAN)
-            ))
-        .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0));
-
+                new Point(8.191, 56.279, Point.CARTESIAN),
+                new Point(scoreSpecimenX, 67.738, Point.CARTESIAN)))
+            .setConstantHeadingInterpolation(Math.toRadians(0))
+            .build();
+        path2 = follower.pathBuilder()
+            .addPath(// Line 2
+                        new BezierCurve(
+                                new Point(scoreSpecimenX, 67.738, Point.CARTESIAN),
+                                new Point(3.963, 45.446, Point.CARTESIAN),
+                                new Point(13.211, 26.422, Point.CARTESIAN),
+                                new Point(69.226, 43.068, Point.CARTESIAN),
+                                new Point(60.242, 28.272, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 3
+                        new BezierLine(
+                                new Point(60.242, 28.272, Point.CARTESIAN),
+                                new Point(17.703, 28.272, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 4
+                        new BezierCurve(
+                                new Point(17.703, 28.272, Point.CARTESIAN),
+                                new Point(75.567, 33.292, Point.CARTESIAN),
+                                new Point(75.303, 8.191, Point.CARTESIAN),
+                                new Point(16.382, 17.439, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 5
+                        new BezierCurve(
+                                new Point(16.382, 17.439, Point.CARTESIAN),
+                                new Point(79.266, 24.044, Point.CARTESIAN),
+                                new Point(75.567, 1.321, Point.CARTESIAN),
+                                new Point(16.117, 10.833, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 6
+                        new BezierCurve(
+                                new Point(16.117, 10.833, Point.CARTESIAN),
+                                new Point(36.462, 29.593, Point.CARTESIAN),
+                                new Point(8.455, 32.235, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 7
+                        new BezierLine(
+                                specimenPickUp,
+                                new Point(scoreSpecimenX, 69.533, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 8
+                        new BezierLine(
+                                new Point(scoreSpecimenX, 69.533, Point.CARTESIAN),
+                                specimenPickUp)
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 9
+                        new BezierLine(
+                                specimenPickUp,
+                                new Point(scoreSpecimenX, 71.103, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 10
+                        new BezierLine(
+                                new Point(scoreSpecimenX, 71.103, Point.CARTESIAN),
+                                specimenPickUp
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 11
+                        new BezierLine(
+                                specimenPickUp,
+                                new Point(scoreSpecimenX, 72.897, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 12
+                        new BezierLine(
+                                new Point(scoreSpecimenX, 72.897, Point.CARTESIAN),
+                                new Point(6.056, 21.533, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0)).build();
     }
 
     /**
@@ -191,13 +293,26 @@ public abstract class rootOpMode extends LinearOpMode {
      * @return if it's picked a good sample or not
      */
     protected boolean chooseSample() {
-        bestSampleInformation = null;
-        currentDetections = sampleDetectionPipeline.getDetectedStones();
-        bestSampleInformation = sampleDetectionPipeline.getBestSampleInformation(currentDetections);
-        if (bestSampleInformation == null) return false;
+        telemetry.addData("count", samplePipeline.count);
+        if (bestSampleInformation != null) {
+            telemetry.addData("x", bestSampleInformation[0]);
+            telemetry.addData("y", bestSampleInformation[1]);
+            telemetry.addData("angle", bestSampleInformation[2]);
+        }
+        else telemetry.addLine("No best sample");
+        if (samplePipeline.bestSampleInformation == null) return false;
+        bestSampleInformation = samplePipeline.bestSampleInformation;
+
+        double total = intake.getSlideLength() + bestSampleInformation[1];
+
+        telemetry.addData("slideLength", intake.getSlideLength());
+        telemetry.addData("arm Length", intake.armLength*Math.sin(Math.acos(bestSampleInformation[0]/intake.armLength)));
+        telemetry.addData("total", total);
+        telemetry.addData("target", total - intake.armLength*Math.sin(Math.acos(bestSampleInformation[0]/intake.armLength)));
 
         //if it's a good sample
-        return bestSampleInformation[0] < 300;
+        if (Math.abs(bestSampleInformation[0]) > intake.armLength) return false;
+        return !intake.tooLong(intake.predictRobotLength(intake.getSlideLength(), bestSampleInformation[1]));
     }
 
     /**
@@ -216,26 +331,29 @@ public abstract class rootOpMode extends LinearOpMode {
     protected void intakeSequence(boolean reset, double powerOrPos) {
         switch (intakeState) {
             case IDLE:
-                if (intake.PIDReady()) hardware.servos.keepSlide.setServo(hardware.servoPositions.keepSlides);
+                if (intake.PIDReady()) break;
                 else intake.slidePID(0);
                 break;
-            case RELEASE:
-                intakeTimer = System.currentTimeMillis();
-                hardware.servos.keepSlide.setServo(hardware.servoPositions.releaseSlides);
-                break;
             case EXTEND:
-                if (intakeTimer + 200 < System.currentTimeMillis()) {
-                    if (TeleOp) {
-                        hardware.motors.intake.setPower(powerOrPos);
-                    }
-                    else {
-                        intake.slidePID(powerOrPos);
-                        if (intake.PIDReady()) intakeState = intakeStates.FIND;
+                if (TeleOp) {
+                    hardware.motors.intake.setPower(powerOrPos);
+                }
+                else {
+                    intake.slidePID(powerOrPos);
+                    if (intake.PIDReady()) {
+                        intakeState = intakeStates.FIND;
+                        sampleCamera();
+//                        camera.resumeViewport();
+                        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
                     }
                 }
                 break;
             case FIND:
-                if (chooseSample()) intakeState = intakeStates.GRAB;
+                if (chooseSample()) {
+                    intakeState = intakeStates.DOWN;
+//                    camera.pauseViewport();
+                    intake.wristToAngle(Math.toRadians(bestSampleInformation[2]));
+                }
                 break;
             case DOWN:
                 currentSlideCM = hardware.motors.intake.dcMotorEx.getCurrentPosition() / intake.ticksPerCM;
@@ -246,7 +364,7 @@ public abstract class rootOpMode extends LinearOpMode {
             case MOVE:
                 intake.slideCM(currentSlideCM + bestSampleInformation[0]);
                 if (intakeTimer + 200 < System.currentTimeMillis()) {
-                    intake.elbowToAngle(bestSampleInformation[1]);
+                    intake.elbowYDistance(bestSampleInformation[1]);
                     intake.wristToAngle(bestSampleInformation[2]);
                     intakeTimer = System.currentTimeMillis();
                     intakeState = intakeStates.GRAB;
@@ -302,5 +420,40 @@ public abstract class rootOpMode extends LinearOpMode {
             telemetry.addLine("red");
             telemetry.update();
         }
+    }
+
+    /**
+     * TODO: documentation
+     */
+    protected void sampleCamera() {
+        intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
+        hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
+        samplePipeline.cameraZPos = 25.8;
+        samplePipeline.cameraAlpha = 0.0;
+        samplePipeline.cameraXPos = 8.3;
+        samplePipeline.AREA_LOWER_LIMIT = 9000;
+        //TODO: change maximum area
+    }
+
+    /**
+     * TODO: documentation
+     */
+    protected void wideCamera() {
+        intake.setElbow(hardware.servoPositions.cameraWide.getDifferential());
+        hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
+        //TODO: set to 60 degrees to fit below low chamber.
+        samplePipeline.cameraZPos = 28.5;
+        samplePipeline.cameraAlpha = 60.0;
+        samplePipeline.cameraXPos = -3.0;
+        //TODO: change maximum area
+    }
+
+    /**
+     * TODO: documentation
+     */
+    protected void specimenCamera() {
+        intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+        hardware.servos.wrist.setServo(hardware.servoPositions.wristSpecimenCamera);
+        //TODO: change maximum area and other variables
     }
 }

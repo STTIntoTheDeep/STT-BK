@@ -18,15 +18,11 @@ import java.util.ArrayList;
 /**
  * TODO: documentation
  * @author Dean van Beek - 3977 STT
- * @author WutIsHummus / Alpeeen - 25679
  */
 @Config
-public class SampleDetectionPipeline extends OpenCvPipeline {
+public class SlimSampleDetectionPipeline extends OpenCvPipeline {
     boolean debug;
-    public SampleDetectionPipeline(boolean localDebug){debug = localDebug;}
-    public boolean saveRAM = true;
-    public volatile double[] bestSampleInformation;
-    public int count;
+    public SlimSampleDetectionPipeline(boolean localDebug){debug = localDebug;}
 
     final double
             xPixels = 640,
@@ -34,10 +30,12 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public double
-            cameraXPos = 8.3, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
-            cameraYPos = 1.0, //Offset in secondary axis versus the differential shaft of the intake
-            cameraZPos = 25.8, //Height of the camera, relative to the floor
+            cameraXPos = 11.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraYPos = 0.0, //Offset in secondary axis versus the differential shaft of the intake
+            cameraZPos = 26.0, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
+
+    public static boolean wantToProcess = false;
 
     /*
      * Working image buffers
@@ -62,17 +60,18 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * Threshold values
      */
     public static int
-            AREA_LOWER_LIMIT = 9000,
+            AREA_LOWER_LIMIT = 5000,
             AREA_UPPER_LIMIT = 100000,
-            YELLOW_MASK_THRESHOLD = 110,
+            YELLOW_MASK_THRESHOLD = 77,
             BLUE_MASK_THRESHOLD = 150,
             RED_MASK_THRESHOLD = 170;
 
     /*
      * Elements for noise reduction
      */
-    Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6.0, 6.0)),
-        dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6.0, 6.0));
+    //TODO: edit to see if we can remove seeing multiple samples as one
+    Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3.5, 3.5)),
+        dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3.5, 3.5));
 
     /*
      * Colors for drawing on the Driver Station.
@@ -93,7 +92,8 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         double cameraYAngle,cameraXAngle;
         double
             actualX,actualY,
-            actualAngle;
+            actualAngle,
+            xFromBorder,yFromBorder;
         Scalar color;
         double score;
 
@@ -114,6 +114,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         void inferX() {
             cameraXAngle = (cameraPosition.x - 0.5 * xPixels) * xDegreePerPixel;
             actualX = (cameraZPos / Math.cos(Math.toRadians(cameraAlpha - cameraYAngle)))*Math.tan(Math.toRadians(cameraXAngle)) * scaleX(cameraYAngle) - cameraYPos;
+            //TODO: correct for intake offset
         }
 
         /**
@@ -132,9 +133,9 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
             score -= (int) Math.pow(actualX, 2);
             //FIXME
         }
+
         /**
          * TODO: documentation
-         * TODO: delete because rectilinear
          * @param y
          * @return
          */
@@ -145,33 +146,10 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     }
 
     ArrayList<Sample> internalSampleList = new ArrayList<>();
+    volatile ArrayList<Sample> clientSampleList = new ArrayList<>();
 
-    /*
-     * Viewport stages
-     */
-    enum Stage {
-        FINAL,
-        YCrCb,
-        MASKS,
-        MASKS_NR,
-        CONTOURS
-    }
-
-    Stage[] stages = Stage.values();
-    int stageNum = 0;
     public Sample bestSample;
     public Scalar desiredColor = YELLOW;
-
-    @Override
-    public void onViewportTapped() {
-        int nextStageNum = stageNum + 1;
-
-        if(nextStageNum >= stages.length) {
-            nextStageNum = 0;
-        }
-
-        stageNum = nextStageNum;
-    }
 
     /**
      * TODO: documentation
@@ -180,43 +158,20 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      */
     @Override
     public Mat processFrame(Mat input) {
-        if (saveRAM) return input;
+        if (!wantToProcess) return input;
+
         internalSampleList.clear();
 
         /*
          * Run the image processing
          */
         findContours(input);
-        count = internalSampleList.size();
-        bestSampleInformation = getBestSampleInformation(internalSampleList);
-        if (debug) if (bestSample != null) if (bestSample.cameraPosition != null) Imgproc.circle(input, bestSample.cameraPosition, 15, WHITE);
-
-
-        /*
-         * Decide which buffer to send to the viewport
-         */
-        switch (stages[stageNum]) {
-            case YCrCb:
-                return YCbCrMat;
-
-            case MASKS:
-                Mat masks = new Mat();
-                Core.addWeighted(yellowThresholdMat, 1.0, redThresholdMat, 1.0, 0.0, masks);
-                Core.addWeighted(masks, 1.0, blueThresholdMat, 1.0, 0.0, masks);
-                return masks;
-
-            case MASKS_NR:
-                Mat masksNR = new Mat();
-                Core.addWeighted(morphedYellowThreshold, 1.0, morphedRedThreshold, 1.0, 0.0, masksNR);
-                Core.addWeighted(masksNR, 1.0, morphedBlueThreshold, 1.0, 0.0, masksNR);
-                return masksNR;
-
-            case CONTOURS:
-                return contoursOnPlainImageMat;
-
-            default:
-                return input;
+        if (debug) {
+            if (bestSample != null) if (bestSample.cameraPosition != null) Imgproc.circle(input, bestSample.cameraPosition, 15, WHITE);
         }
+        clientSampleList = new ArrayList<>(internalSampleList);
+
+        return input;
     }
 
     /**
@@ -231,40 +186,56 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         Core.extractChannel(YCbCrMat, CbMat, 2); // Cb channel index is 2
         Core.extractChannel(YCbCrMat, CrMat, 1); // Cr channel index is 1
 
-        // Threshold the channels to form masks
-        Imgproc.threshold(CbMat, blueThresholdMat, BLUE_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
-        Imgproc.threshold(CrMat, redThresholdMat, RED_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
-        Imgproc.threshold(CbMat, yellowThresholdMat, YELLOW_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY_INV);
+        if (desiredColor == BLUE) {
+            // Threshold the channels to form masks
+            Imgproc.threshold(CbMat, blueThresholdMat, BLUE_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
 
-        // Apply morphology to the masks
-        morphMask(blueThresholdMat, morphedBlueThreshold);
-        morphMask(redThresholdMat, morphedRedThreshold);
-        morphMask(yellowThresholdMat, morphedYellowThreshold);
+            // Apply morphology to the masks
+            morphMask(blueThresholdMat, morphedBlueThreshold);
 
-        // Find contours in the masks
-        ArrayList<MatOfPoint> blueContoursList = new ArrayList<>();
-        Imgproc.findContours(morphedBlueThreshold, blueContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+            // Find contours in the masks
+            ArrayList<MatOfPoint> blueContoursList = new ArrayList<>();
+            Imgproc.findContours(morphedBlueThreshold, blueContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
 
-        ArrayList<MatOfPoint> redContoursList = new ArrayList<>();
-        Imgproc.findContours(morphedRedThreshold, redContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+            // Create a plain image for drawing contours
+            contoursOnPlainImageMat = Mat.zeros(input.size(), input.type());
 
-        ArrayList<MatOfPoint> yellowContoursList = new ArrayList<>();
-        Imgproc.findContours(morphedYellowThreshold, yellowContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
-
-        // Create a plain image for drawing contours
-        contoursOnPlainImageMat = Mat.zeros(input.size(), input.type());
-
-        // Analyze and draw contours
-        for(MatOfPoint contour : blueContoursList) {
-            analyzeContour(contour, input, BLUE);
+            // Analyze and draw contours
+            for(MatOfPoint contour : blueContoursList) {
+                analyzeContour(contour, input, BLUE);
+            }
         }
+        else if (desiredColor == RED) {
+            // Threshold the channels to form masks
+            Imgproc.threshold(CrMat, redThresholdMat, RED_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
 
-        for(MatOfPoint contour : redContoursList) {
-            analyzeContour(contour, input, RED);
+            // Apply morphology to the masks
+            morphMask(redThresholdMat, morphedRedThreshold);
+
+            // Find contours in the masks
+            ArrayList<MatOfPoint> redContoursList = new ArrayList<>();
+            Imgproc.findContours(morphedRedThreshold, redContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+
+            // Analyze and draw contours
+            for(MatOfPoint contour : redContoursList) {
+                analyzeContour(contour, input, RED);
+            }
         }
+        else if (desiredColor == YELLOW) {
+            // Threshold the channels to form masks
+            Imgproc.threshold(CbMat, yellowThresholdMat, YELLOW_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY_INV);
 
-        for(MatOfPoint contour : yellowContoursList) {
-            analyzeContour(contour, input, YELLOW);
+            // Apply morphology to the masks
+            morphMask(yellowThresholdMat, morphedYellowThreshold);
+
+            // Find contours in the masks
+            ArrayList<MatOfPoint> yellowContoursList = new ArrayList<>();
+            Imgproc.findContours(morphedYellowThreshold, yellowContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+
+            // Analyze and draw contours
+            for (MatOfPoint contour : yellowContoursList) {
+                analyzeContour(contour, input, YELLOW);
+            }
         }
     }
 
@@ -328,10 +299,10 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
                   (int) Math.round(angle) + " deg " +
 //                  (int) Math.round(rotatedRectFitToContour.size.area()) + " area " +
                     Math.round(10 * (sample.actualX - cameraYPos)) + " x " +
-                    Math.round(10 * (sample.actualY + cameraXPos)) + " y",
+                    Math.round(10 * (sample.actualY + cameraXPos)) + " y" +
 //                    (int) Math.round(sample.cameraXAngle) + " x " +
 //                    (long) sample.cameraYAngle + " y ",
-//                    sample.score + " score ",
+                    sample.score + " score ",
                     input, BLUE);
             }
         }
@@ -342,7 +313,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * @param sampleList
      * @return
      */
-    public void getBestSample(ArrayList<Sample> sampleList) {
+    public boolean getBestSample(ArrayList<Sample> sampleList) {
         if (!sampleList.isEmpty()) {
             bestSample = null;
             for (Sample sample : sampleList) {
@@ -359,7 +330,11 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     //        sample.xFromBorder;
                 //TODO: if too close to border remove from sampleList
             }
-        } else bestSample = null;
+            return true;
+        } else {
+            bestSample = null;
+            return false;
+        }
     }
 
     /**
@@ -368,10 +343,15 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * @return
      */
     public double[] getBestSampleInformation(ArrayList<Sample> sampleList) {
-        getBestSample(sampleList);
-        if (bestSample == null) return null;
+        if (!getBestSample(sampleList)) return null;
         return new double[] {bestSample.actualX, bestSample.actualY, bestSample.grabAngle};
     }
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public double[] getBestSampleInformation() {return getBestSampleInformation(clientSampleList);}
 
     /**
      * TODO: documentation
@@ -381,7 +361,6 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * @param color
      */
     static void drawTagText(RotatedRect rect, String text, Mat mat, Scalar color) {
-
         Imgproc.putText(
                 mat, // The buffer we're drawing on
                 text, // The text we're drawing
@@ -389,7 +368,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
                         rect.center.x - 50,  // x anchor point
                         rect.center.y + 25), // y anchor point
                 Imgproc.FONT_HERSHEY_PLAIN, // Font
-                1, // Font size
+                2, // Font size
                 color, // Font color
                 1); // Font thickness
         Imgproc.line(mat, new Point(224,0), new Point(224,800), color, 2);

@@ -1,31 +1,21 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tuning;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.hardware;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This is the StrafeVelocityTuner autonomous tuning OpMode. This runs the robot right at max
@@ -42,54 +32,25 @@ import java.util.List;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/13/2024
  */
+//TODO: documentation
 @Config
 @Autonomous(name = "Strafe Velocity Tuner", group = "Autonomous Pathing Tuning")
-public class StrafeVelocityTuner extends OpMode {
-    private ArrayList<Double> velocities = new ArrayList<>();
+public class StrafeVelocityTuner extends LinearOpMode {
+    private final ArrayList<Double> velocities = new ArrayList<>(RECORD_NUMBER+1);
 
-    private DcMotorEx leftFront;
-    private DcMotorEx leftRear;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightRear;
-    private List<DcMotorEx> motors;
-
-    private PoseUpdater poseUpdater;
+    Drivetrain drivetrain;
 
     public static double DISTANCE = 48;
-    public static double RECORD_NUMBER = 10;
+    public static int RECORD_NUMBER = 10;
 
-    private Telemetry telemetryA;
+    Telemetry telemetryA;
 
-    private boolean end;
+    boolean end;
 
-    /**
-     * This initializes the drive motors as well as the cache of velocities and the FTC Dashboard
-     * telemetry.
-     */
     @Override
-    public void init() {
-        poseUpdater = new PoseUpdater(hardwareMap);
-
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-        leftFront.setDirection(leftFrontMotorDirection);
-        leftRear.setDirection(leftRearMotorDirection);
-        rightFront.setDirection(rightFrontMotorDirection);
-        rightRear.setDirection(rightRearMotorDirection);
-
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
-        }
-
-        for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
+    public void runOpMode() throws InterruptedException {
+        drivetrain = new MecanumDrivetrain(hardwareMap);
+        PoseUpdater poseUpdater = new PoseUpdater(hardwareMap);
 
         for (int i = 0; i < RECORD_NUMBER; i++) {
             velocities.add(0.0);
@@ -101,63 +62,53 @@ public class StrafeVelocityTuner extends OpMode {
         telemetryA.addLine("After running the distance, the robot will cut power from the drivetrain and display the strafe velocity.");
         telemetryA.addLine("Press CROSS or A on game pad 1 to stop.");
         telemetryA.update();
-    }
 
-    /**
-     * This starts the OpMode by setting the drive motors to run right at full power.
-     */
-    @Override
-    public void start() {
-        leftFront.setPower(1);
-        leftRear.setPower(-1);
-        rightFront.setPower(-1);
-        rightRear.setPower(1);
-    }
+        waitForStart();
+        if (isStopRequested()) return;
 
-    /**
-     * This runs the OpMode. At any point during the running of the OpMode, pressing CROSS or A on
-     * game pad1 will stop the OpMode. This continuously records the RECORD_NUMBER most recent
-     * velocities, and when the robot has run sideways enough, these last velocities recorded are
-     * averaged and printed.
-     */
-    @Override
-    public void loop() {
-        if (gamepad1.cross || gamepad1.a) {
-            for (DcMotorEx motor : motors) {
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                motor.setPower(0);
+        drivetrain.run(new Vector(1,1.5*Math.PI), 0);
+        end = false;
+
+        while (opModeIsActive()) {
+            if (gamepad1.cross || gamepad1.a) {
+                drivetrain.stopMotors();
+                hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                requestOpModeStop();
             }
-            requestOpModeStop();
-        }
 
-        poseUpdater.update();
-        if (!end) {
-            if (Math.abs(poseUpdater.getPose().getY()) > DISTANCE) {
-                end = true;
-                for (DcMotorEx motor : motors) {
-                    motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                    motor.setPower(0);
+            poseUpdater.update();
+            if (!end) {
+                if (Math.abs(poseUpdater.getPose().getY()) > DISTANCE) {
+                    end = true;
+                    drivetrain.stopMotors();
+                    hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                    hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                } else {
+                    double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), new Vector(1, 1.5*Math.PI)));
+                    velocities.add(currentVelocity);
+                    velocities.remove(0);
+                    drivetrain.run(new Vector(1,1.5*Math.PI), 0);
                 }
             } else {
-                double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), new Vector(1, Math.PI / 2)));
-                velocities.add(currentVelocity);
-                velocities.remove(0);
-            }
-        } else {
-            leftFront.setPower(0);
-            leftRear.setPower(0);
-            rightFront.setPower(0);
-            rightRear.setPower(0);
-            for (DcMotorEx motor : motors) {
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            }
-            double average = 0;
-            for (Double velocity : velocities) {
-                average += velocity;
-            }
-            average /= (double) velocities.size();
+                drivetrain.stopMotors();
+                hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                double average = 0;
+                for (Double velocity : velocities) {
+                    average += velocity;
+                }
+                average /= velocities.size();
 
-            telemetryA.addData("strafe velocity:", average);
+                telemetryA.addData("strafe velocity: ", average);
+            }
+            telemetryA.addData("lateral distance: ", poseUpdater.getPose().getY());
             telemetryA.update();
         }
     }

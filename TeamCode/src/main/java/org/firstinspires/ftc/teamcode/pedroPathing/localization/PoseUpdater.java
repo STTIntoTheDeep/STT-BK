@@ -1,15 +1,13 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.localization;
 
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers.ThreeWheelIMULocalizer;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers.ThreeWheelLocalizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers.TwoWheelLocalizer;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 /**
  * This is the PoseUpdater class. This class handles getting pose data from the localizer and returning
@@ -54,10 +52,6 @@ public class PoseUpdater {
      */
     public PoseUpdater(HardwareMap hardwareMap, Localizer localizer) {
         this.hardwareMap = hardwareMap;
-
-        for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
-            module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
 
         this.localizer = localizer;
         imu = localizer.getIMU();

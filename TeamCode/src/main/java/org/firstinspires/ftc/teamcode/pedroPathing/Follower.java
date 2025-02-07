@@ -1,40 +1,31 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.drivePIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.drivePIDFSwitch;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.forwardZeroPowerAcceleration;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.headingPIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.headingPIDFSwitch;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.lateralZeroPowerAcceleration;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.secondaryDrivePIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.secondaryHeadingPIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.secondaryTranslationalPIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.translationalPIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.translationalPIDFSwitch;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.useSecondaryDrivePID;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.useSecondaryHeadingPID;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.useSecondaryTranslationalPID;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.drivePIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.drivePIDFSwitch;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.forwardZeroPowerAcceleration;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.headingPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.headingPIDFSwitch;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.lateralZeroPowerAcceleration;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.secondaryDrivePIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.secondaryHeadingPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.secondaryTranslationalPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.translationalPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.translationalPIDFSwitch;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.useSecondaryDrivePID;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.useSecondaryHeadingPID;
+import static org.firstinspires.ftc.teamcode.pedroPathing.FollowerConstants.useSecondaryTranslationalPID;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.DifferentialSwerveDrivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierPoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
@@ -42,9 +33,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathBuilder;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathCallback;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
-import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.DashboardPoseTracker;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.FilteredPIDFController;
@@ -52,8 +42,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.KalmanFilter;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This is the Follower class. It handles the actual following of the paths and all the on-the-fly
@@ -67,13 +55,8 @@ import java.util.List;
  */
 @Config
 public class Follower {
+    //TODO: fix some of these warnings
     private HardwareMap hardwareMap;
-
-    private DcMotorEx leftFront;
-    private DcMotorEx leftRear;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightRear;
-    private List<DcMotorEx> motors;
 
     private Drivetrain drivetrain;
 
@@ -171,28 +154,6 @@ public class Follower {
         else if (FollowerConstants.drivetrain == FollowerConstants.Drivetrains.DifferentialSwerve) drivetrain = new DifferentialSwerveDrivetrain(hardwareMap);
 
         poseUpdater = new PoseUpdater(hardwareMap);
-
-        //TODO: remove if nothing breaks
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-        leftFront.setDirection(leftFrontMotorDirection);
-        leftRear.setDirection(leftRearMotorDirection);
-        rightFront.setDirection(rightFrontMotorDirection);
-        rightRear.setDirection(rightRearMotorDirection);
-
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
-        }
-
-        for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
 
@@ -439,8 +400,12 @@ public class Follower {
     /**
      * This starts TeleOp drive control.
      */
-    public void startTeleopDrive() {
+    public void startTeleOpDrive() {
         breakFollowing();
+        hardware.motors.leftBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hardware.motors.rightBack.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hardware.motors.leftFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hardware.motors.rightFront.dcMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         teleOpDrive = true;
     }
 
@@ -467,25 +432,15 @@ public class Follower {
                 if (holdingPosition) {
                     closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), 1);
 
-                    drivePowers = drivetrain.getDrivePowers(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
+                    drivetrain.run(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
 
-                    //TODO: delete if the other thing works
-                    for (int i = 0; i < motors.size(); i++) {
-                        motors.get(i).setPower(drivePowers[i]);
-                    }
                 } else {
                     if (isBusy) {
                         closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), BEZIER_CURVE_BINARY_STEP_LIMIT);
 
                         if (followingPathChain) updateCallbacks();
 
-                        drivePowers = drivetrain.getDrivePowers(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseUpdater.getPose().getHeading());
-
-                        //TODO: delete if the other thing works
-                        for (int i = 0; i < motors.size(); i++) {
-                            motors.get(i).setPower(drivePowers[i]);
-                        }
-//                        drivetrain.setDrivePowers(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
+                        drivetrain.run(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseUpdater.getPose().getHeading());
                     }
                     if (currentPath.isAtParametricEnd()) {
                         if (followingPathChain && chainIndex < currentPathChain.size() - 1) {
@@ -518,17 +473,6 @@ public class Follower {
                 }
             }
         } else {
-//            velocities.add(poseUpdater.getVelocity());
-//            velocities.remove(velocities.get(velocities.size() - 1));
-//
-//            calculateAveragedVelocityAndAcceleration();
-//
-//            drivePowers = drivetrain.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().getHeading());
-//
-//            TODO: delete if the other thing works
-//            for (int i = 0; i < motors.size(); i++) {
-//                motors.get(i).setPower(drivePowers[i]);
-//            }
             //FIXME field centric
             drivetrain.run(new Vector(0,0), new Vector(teleopDriveValues[2],0), teleopDriveVector, 0);
         }
@@ -670,11 +614,7 @@ public class Follower {
         teleopDriveVector = new Vector();
         teleopHeadingVector = new Vector();
 
-        //TODO: delete if the reset motors method works
-        for (int i = 0; i < motors.size(); i++) {
-            motors.get(i).setPower(0);
-        }
-        drivetrain.resetMotors();
+        drivetrain.stopMotors();
     }
 
     /**

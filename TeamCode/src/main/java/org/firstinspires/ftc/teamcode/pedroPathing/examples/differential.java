@@ -6,17 +6,12 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.DifferentialSwerveDrivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.DifferentialSwervePod;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
-
-import java.util.Arrays;
-import java.util.List;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 @Config
 @TeleOp(group = "Tests")

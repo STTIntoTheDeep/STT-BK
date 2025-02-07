@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 public class hardware {
     //TODO: test if all these this.xxx are necessary
 
-    public static boolean reduceHardwareCalls = false;
+    public static boolean reduceHardwareCalls = true;
 
     /**
      * This enumerator contains all the motors, preferably in the order of their hardware ports.
@@ -34,7 +34,7 @@ public class hardware {
         rightFront("right_front"),//For swerve forward
 
         hook("hook", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
-        intake("intake", DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
+        intake("intake", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
         outtakeLeft("outtakeLeft", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
         outtakeRight("outtakeRight", DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -144,27 +144,27 @@ public class hardware {
      */
     public enum servos {
         elbowLeft("elbowLeft"),
-        intake("intake"),
-        outtakeClaw("claw", 0.0),
+        intake("intakeClaw", 600, 2400),
+        outtakeClaw("claw", 600, 2400),
         wrist("wrist"),
         shoulder("shoulder"),
-        elbowRight("elbowRight"),
-        keepSlide("keepSlides", 0.0);
+        elbowRight("elbowRight");
 
         /**
          *
          * @param name
-         * @param startPosition
+         * @param usLower
+         * @param usUpper
          */
-        servos(String name, Double startPosition) {this.name = name; this.startPosition = startPosition;}
+        servos(String name, int usLower, int usUpper) {this.name = name; PwmRange = new PwmControl.PwmRange(usLower,usUpper);}
 
-        servos(String name){this(name, null);}
+        servos(String name){this(name, 500, 2500);}
 
         private final String name;
 
-        private final Double startPosition;
+        private final PwmControl.PwmRange PwmRange;
 
-        public ServoImplEx servo;
+        private ServoImplEx servo;
 
         private double lastPosition = 0;
 
@@ -181,13 +181,11 @@ public class hardware {
         public double getLastPosition() {return this.lastPosition;}
 
         /**
-         * This absolutely breaks if startPosition is null
-         * FIXME
-         * @return
+         * TODO: documentation, link GM0
+         * @param usLower
+         * @param usUpper
          */
-        public double getStartPosition() {
-            return this.startPosition;
-        }
+        public void setPwmRange(int usLower, int usUpper) {servo.setPwmRange(new PwmControl.PwmRange(usLower, usUpper));}
 
         /**
          *
@@ -195,7 +193,7 @@ public class hardware {
          */
         public void initServo(HardwareMap map) {
             servo = map.get(ServoImplEx.class, getName());
-            if (startPosition != null) servo.setPosition(startPosition);
+            servo.setPwmRange(PwmRange);
         }
 
         /**
@@ -212,26 +210,33 @@ public class hardware {
          * Is a shorthand, but not usable for the differential or other combined servo positions.
          */
         public void setServo(servoPositions position){setServo(position.getPosition());}
+
     }
 
     /**
      *
      */
     public enum servoPositions {
-        intakeGrip(0.45),
-        intakeRelease(0.08),
-        wristTransfer(0.0),
+        intakeGrip(0.76),
+        intakeRelease(0.44),
+        wristTransfer(0.39),
+        wristSampleCamera(0.125),
+        wristSpecimenCamera(0.71),
         keepSlides(0.5),
         releaseSlides(0),
 
-        outtakeGrip(0.5),
-        outtakeRelease(0.05),
+        outtakeGrip(0.54),
+        outtakeRelease(0.0),
         shoulderTransfer(0.0),
-        shoulderForward(0),
-        shoulderBack(0.8),
+        shoulderForward(0.82),
+        shoulderBack(0.34),
 
-        elbowCentered(new double[]{1.0, 0.5}),
-        elbowTransfer(new double[]{0.1, 0.3});//0.4, 0.6
+        elbowLeft(new double[] {0.80,-0.07}),
+        elbowRight(new double[] {0.28,-0.07}),
+        elbowCentered(new double[]{0.53,-0.07}),
+        elbowTransfer(new double[]{0.53, 0.41}),
+        cameraDown(new double[]{0.53,0.18}),
+        cameraWide(new double[]{0.53,0.34});
 
         servoPositions(double position) {this.position = position;}
         private double position;

@@ -294,19 +294,16 @@ class AprilTagDetectionPipeline extends OpenCvPipeline {
      * A simple container to hold both rotation and translation
      * vectors, which together form a 6DOF pose.
      */
-    class Pose
-    {
+    class Pose {
         Mat rvec;
         Mat tvec;
 
-        public Pose()
-        {
+        public Pose() {
             rvec = new Mat(3, 1, CvType.CV_32F);
             tvec = new Mat(3, 1, CvType.CV_32F);
         }
 
-        public Pose(Mat rvec, Mat tvec)
-        {
+        public Pose(Mat rvec, Mat tvec) {
             this.rvec = rvec;
             this.tvec = tvec;
         }

@@ -1,30 +1,19 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.localization.tuning;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorName;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.leftRearMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightFrontMotorDirection;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.rightRearMotorDirection;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.DashboardPoseTracker;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Drawing;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This is the LocalizationTest OpMode. This is basically just a simple mecanum drive attached to a
@@ -32,7 +21,8 @@ import java.util.List;
  * on FTC Dashboard (192/168/43/1:8080/dash). You should use this to check the robot's localization.
  *
  * @author Anyi Lin - 10158 Scott's Bots
- * @version 1.0, 5/6/2024
+ * @author Dean van Beek - 3977 STT
+ * @version 1.0, 31/01/2025
  */
 @Config
 @TeleOp(group = "Pedro Pathing Tuning", name = "Localization Test")
@@ -40,42 +30,18 @@ public class LocalizationTest extends OpMode {
     private PoseUpdater poseUpdater;
     private DashboardPoseTracker dashboardPoseTracker;
     private Telemetry telemetryA;
-
-    private DcMotorEx leftFront;
-    private DcMotorEx leftRear;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightRear;
-    private List<DcMotorEx> motors;
+    Drivetrain drivetrain;
 
     /**
      * This initializes the PoseUpdater, the mecanum drive motors, and the FTC Dashboard telemetry.
      */
     @Override
     public void init() {
+        drivetrain = new MecanumDrivetrain(hardwareMap);
         poseUpdater = new PoseUpdater(hardwareMap);
+        poseUpdater.setStartingPose(new Pose(120, 24, Math.PI));
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
-
-        leftFront = hardwareMap.get(DcMotorEx.class, leftFrontMotorName);
-        leftRear = hardwareMap.get(DcMotorEx.class, leftRearMotorName);
-        rightRear = hardwareMap.get(DcMotorEx.class, rightRearMotorName);
-        rightFront = hardwareMap.get(DcMotorEx.class, rightFrontMotorName);
-        leftFront.setDirection(leftFrontMotorDirection);
-        leftRear.setDirection(leftRearMotorDirection);
-        rightFront.setDirection(rightFrontMotorDirection);
-        rightRear.setDirection(rightRearMotorDirection);
-
-        motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
-
-        for (DcMotorEx motor : motors) {
-            MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
-            motorConfigurationType.setAchieveableMaxRPMFraction(1.0);
-            motor.setMotorType(motorConfigurationType);
-        }
-
-        for (DcMotorEx motor : motors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will print your robot's position to telemetry while "
@@ -96,22 +62,10 @@ public class LocalizationTest extends OpMode {
         dashboardPoseTracker.update();
 
         double y = -gamepad1.left_stick_y; // Remember, this is reversed!
-        double x = gamepad1.left_stick_x; // this is strafing
+        double x = -gamepad1.left_stick_x; // this is strafing
         double rx = gamepad1.right_stick_x;
 
-        // Denominator is the largest motor power (absolute value) or 1
-        // This ensures all the powers maintain the same ratio, but only when
-        // at least one is out of the range [-1, 1]
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double leftFrontPower = (y + x + rx) / denominator;
-        double leftRearPower = (y - x + rx) / denominator;
-        double rightFrontPower = (y - x - rx) / denominator;
-        double rightRearPower = (y + x - rx) / denominator;
-
-        leftFront.setPower(leftFrontPower);
-        leftRear.setPower(leftRearPower);
-        rightFront.setPower(rightFrontPower);
-        rightRear.setPower(rightRearPower);
+        drivetrain.run(new Vector(y,x), rx);
 
         telemetryA.addData("x", poseUpdater.getPose().getX());
         telemetryA.addData("y", poseUpdater.getPose().getY());

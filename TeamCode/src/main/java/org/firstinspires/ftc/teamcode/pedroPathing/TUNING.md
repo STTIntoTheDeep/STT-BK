@@ -18,7 +18,7 @@ measurements will be in centimeters.
   are correct.
 
 * After that, we need the mass of the robot in kg. This is used for the centripetal force correction,
-  and the mass, with the variable name `mass`, should be put on line `92` in the `FollowerConstants`
+  and the mass, with the variable name `mass`, should be put on line `115` in the `FollowerConstants`
   class under the `tuning` package.
 
 * Next, we need to find the preferred mecanum drive vectors. The rollers on mecanum wheels point at a
@@ -54,15 +54,15 @@ measurements will be in centimeters.
   the `useTranslational` checkboxes under the `Follower` tab. Then, run `StraightBackAndForth`.
   Make sure you disable the timer on autonomous OpModes. You will notice in telemetry a message saying
   that the robot will travel a distance forward and backward, this will not happen until later, so for
-  now you can ignore this message. The robot should not move when you run the opmode initally. Instead,
-  it should correct when you push it away from its   starting position. Note that this correction should
-  happen regardless of the robot's rotation, and   that the robot should not rotate itself (if it does,
+  now you can ignore this message. The robot should not move when you run the opmode initially. Instead,
+  it should correct when you push it away from its starting position. Note that this correction should
+  happen regardless of the robot's rotation, and that the robot should not rotate itself (if it does,
   disable `useHeading` as mentioned prior). Also note that the robot will only correct to an imaginary line
   that runs straight forward from the robot's starting position, meaning that it will not correct in the
   (original) forward direction. The PID for the translational error is called `translationalPIDF`.
   If you need to add a feedforward value, use the `translationalPIDFFeedForward` since that will add
   the feedforward in the direction the robot is trying to move, rather than the feedforward in the
-  PIDF itself, since those will only add the feedforward one way. You can change   the PIDF constants
+  PIDF itself, since those will only add the feedforward one way. You can change the PIDF constants
   and feedforward values, under the `FollowerConstants` tab in FTC Dashboard.
   To tune the PID, push the robot off the path and see how corrects. You will want to alternate sides
   you push to reduce field wear and tear as well as push with varying power and distance. I would 

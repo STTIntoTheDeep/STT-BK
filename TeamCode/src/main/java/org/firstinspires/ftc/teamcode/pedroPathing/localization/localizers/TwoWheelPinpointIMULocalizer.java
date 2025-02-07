@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Encoder;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.Localizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Matrix;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Matrix;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.NanoTimer;
 
 

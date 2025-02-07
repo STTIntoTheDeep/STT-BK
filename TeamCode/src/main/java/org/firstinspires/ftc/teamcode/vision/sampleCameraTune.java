@@ -1,77 +1,109 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.firstinspires.ftc.teamcode.hardware;
+import org.firstinspires.ftc.teamcode.opModes.rootOpMode;
 
-import java.util.ArrayList;
 @Config
 @TeleOp(name = "Camera Tune",group = "TeleOp")
-public class sampleCameraTune extends LinearOpMode {
-    OpenCvCamera camera;
-    final SampleDetectionPipeline sampleDetectionPipeline = new SampleDetectionPipeline(true);
+public class sampleCameraTune extends rootOpMode {
+    Gamepad currentGamepad = new Gamepad();
+    Gamepad previousGamepad = new Gamepad();
 
-    public static int x = 0, y = 0;
-    public static boolean red, yellow, blue;
-    double[] bestInfo;
+    double slideTarget;
+    boolean intakeClaw = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-
-        camera.setPipeline(sampleDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {camera.startStreaming(800,448, OpenCvCameraRotation.SIDEWAYS_LEFT);}
-
-            @Override
-            public void onError(int errorCode) {}
-        });
-        telemetry.setMsTransmissionInterval(25);
-
-        FtcDashboard.getInstance().startCameraStream(camera, 0);
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        initialize(false);
+        hardware.reduceHardwareCalls = false;
+        hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
+        hardware.reduceHardwareCalls = true;
 
         while (!isStarted() && !isStopRequested()) {
-            ArrayList<SampleDetectionPipeline.Sample> currentDetections = sampleDetectionPipeline.getDetectedStones();
-            if (gamepad1.a) {
-                telemetry.addLine("red");
-            }
-            else if (gamepad1.b) {
-                sampleDetectionPipeline.desiredColor = SampleDetectionPipeline.BLUE;
-                telemetry.addLine("blue");
-            }
-            else if (gamepad1.x) {
-                sampleDetectionPipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-                telemetry.addLine("yellow");
-            }
-//            if (sampleDetectionPipeline.bestSample != null) {
-//                if (sampleDetectionPipeline.bestSample.cameraPosition != null) {
-//                    telemetry.addData("angle", sampleDetectionPipeline.bestSample.grabAngle);
-//                    telemetry.addData("x", sampleDetectionPipeline.bestSample.cameraPosition.x);
-//                    telemetry.addData("y", sampleDetectionPipeline.bestSample.cameraPosition.y);
-//                }
-//            }
-//            bestInfo = sampleDetectionPipeline.getBestSampleInformation(currentDetections, SampleDetectionPipeline.RED);
-//                telemetry.addData("x", sample.actualX);
-//                telemetry.addData("y", sample.actualY);
-//                telemetry.addData("standard y", 28.5 * Math.tan(Math.toRadians(43.13)));
-//                telemetry.addData("cos", 28.5 / Math.cos(Math.toRadians(43.13)));
-//                telemetry.addData("standard x", (28.5 / Math.cos(Math.toRadians(43.13)))*Math.tan(Math.toRadians(sample.cameraXAngle)));
+            chooseAlliance();
             telemetry.update();
         }
+
+        intake.slidePID(0);
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            previousGamepad.copy(currentGamepad);
+            currentGamepad.copy(gamepad1);
+
+            if (currentGamepad.dpad_left) {
+                sampleCamera();
+                hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
+            }
+            else if (currentGamepad.dpad_right) wideCamera();
+
+            if (currentGamepad.a && !previousGamepad.a) {
+                if (intakeState == intakeStates.IDLE) {
+                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+                    intakeState = intakeStates.FIND;
+                    samplePipeline.saveRAM = false;
+                    sampleCamera();
+                } else if (intakeState == intakeStates.FIND && bestSampleInformation != null) {
+                    hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+                    samplePipeline.saveRAM = true;
+                    intake.wristToAngle(Math.toRadians(bestSampleInformation[2])+Math.acos(bestSampleInformation[0]/intake.armLength));
+                    intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
+                    slideTarget = intake.getSlideLength() + bestSampleInformation[1] - intake.armLength*Math.sin(Math.acos(-bestSampleInformation[0]/intake.armLength));
+                    intakeState = intakeStates.DOWN;
+                } else if (intakeState == intakeStates.DOWN) {
+                    intakeTimer = System.currentTimeMillis();
+                    intake.elbowYDistance(bestSampleInformation[1]);
+                    intakeState = intakeStates.MOVE;
+                } else if (intakeState == intakeStates.MOVE) {
+                    hardware.servos.intake.setServo(hardware.servoPositions.intakeGrip);
+                    intakeState = intakeStates.GRAB;
+                } else if (intakeState == intakeStates.GRAB) {
+                    intakeState = intakeStates.PRE_DONE;
+                    intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
+                } else if (intakeState == intakeStates.PRE_DONE) {
+                    intakeState = intakeStates.DONE;
+                    intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+                }
+            }
+
+            switch (intakeState) {
+                case IDLE:
+                    if (!intake.PIDReady()) intake.slidePID(0);
+                    break;
+                case EXTEND:
+                    break;
+                case FIND:
+                    hardware.motors.intake.setPower(-currentGamepad.left_stick_y);
+                    chooseSample();
+                    break;
+                case DOWN:
+                    intake.slideCM(slideTarget);
+                    break;
+                case DONE:
+                    intake.slidePID(0);
+                    break;
+            }
+
+            if (currentGamepad.dpad_down && !previousGamepad.dpad_down) intakeClaw ^= true;
+            hardware.servos.intake.setServo((intakeClaw) ? hardware.servoPositions.intakeGrip : hardware.servoPositions.intakeRelease);
+
+//            if (currentGamepad.y && !previousGamepad.y) samplePipeline.saveRAM ^= true;
+//
+//            if (currentGamepad.a && !previousGamepad.a) samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+//            if (currentGamepad.x && !previousGamepad.x) samplePipeline.desiredColor = SampleDetectionPipeline.RED;
+//            if (currentGamepad.b && !previousGamepad.b) samplePipeline.desiredColor = SampleDetectionPipeline.BLUE;
+
+            telemetry.addData("state",intakeState.ordinal());
+            telemetry.addData("saveRAM", samplePipeline.saveRAM);
+            if (samplePipeline.desiredColor == SampleDetectionPipeline.YELLOW) telemetry.addLine("yellow");
+            else if (samplePipeline.desiredColor == SampleDetectionPipeline.BLUE) telemetry.addLine("blue");
+            else if (samplePipeline.desiredColor == SampleDetectionPipeline.RED) telemetry.addLine("red");
+            telemetry.addData("slideTarget", slideTarget);
             telemetry.update();
         }
     }

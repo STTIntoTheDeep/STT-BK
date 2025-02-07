@@ -1,4 +1,6 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
+package org.firstinspires.ftc.teamcode.pedroPathing.util;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 
 /**
  * This is the Vector class. This class handles storing information about vectors, which are

@@ -10,8 +10,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
 
 @Config
 @TeleOp(group = "Tests")
@@ -35,7 +33,7 @@ public class outreachBot extends LinearOpMode {
             hardware.motors.rightBack.initMotor(hardwareMap);
             double fwd = -gamepad1.left_stick_y;
             double rot = gamepad1.right_stick_x;
-            hardware.motors.leftFront.setPower(-fwd + rot);
+            hardware.motors.leftFront.setPower(fwd - rot);
             hardware.motors.rightBack.setPower(fwd + rot);
 //            follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 //            follower.update();
