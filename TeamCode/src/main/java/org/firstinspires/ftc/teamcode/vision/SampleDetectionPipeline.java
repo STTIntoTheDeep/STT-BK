@@ -34,9 +34,9 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public double
-            cameraXPos = 8.3, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
-            cameraYPos = 1.0, //Offset in secondary axis versus the differential shaft of the intake
-            cameraZPos = 25.8, //Height of the camera, relative to the floor
+            cameraXPos = 9.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraYPos = -0.6, //Offset in secondary axis versus the differential shaft of the intake
+            cameraZPos = 22, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
 
     /*
@@ -57,6 +57,8 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     Mat contoursOnPlainImageMat = new Mat();
 
     RotatedRect rotatedRectFitToContour;
+
+    ArrayList<MatOfPoint> blueContoursList = new ArrayList<>(), yellowContoursList = new ArrayList<>(), redContoursList = new ArrayList<>();
 
     /*
      * Threshold values
@@ -139,7 +141,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
          * @return
          */
         double scaleX(double y) {
-            return 1;
+            return 2.25;
 //            return Math.cos(Math.toRadians(9*Math.sqrt(3025.0/377.0))) * y + 1; //TODO regression
         }
     }
@@ -160,7 +162,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     Stage[] stages = Stage.values();
     int stageNum = 0;
     public Sample bestSample;
-    public Scalar desiredColor = YELLOW;
+    public volatile Scalar desiredColor = YELLOW, processingColor = YELLOW;
 
     @Override
     public void onViewportTapped() {
@@ -186,6 +188,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         /*
          * Run the image processing
          */
+        colorChange();
         findContours(input);
         count = internalSampleList.size();
         bestSampleInformation = getBestSampleInformation(internalSampleList);
@@ -219,6 +222,10 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         }
     }
 
+    private void colorChange() {
+        if (desiredColor != processingColor) processingColor = desiredColor;
+    }
+
     /**
      * TODO: documentation
      * @param input
@@ -226,7 +233,38 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     void findContours(Mat input) {
         // Convert the input image to YCrCb color space
         Imgproc.cvtColor(input, YCbCrMat, Imgproc.COLOR_RGB2YCrCb);
-
+//
+//        if (processingColor == YELLOW) {
+//            Core.extractChannel(YCbCrMat, CbMat, 2); // Cb channel index is 2
+//            Imgproc.threshold(CbMat, yellowThresholdMat, YELLOW_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY_INV);
+//            morphMask(yellowThresholdMat, morphedYellowThreshold);
+//            yellowContoursList.clear();
+//            Imgproc.findContours(morphedYellowThreshold, yellowContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+//            contoursOnPlainImageMat = Mat.zeros(input.size(), input.type());
+//            for(MatOfPoint contour : yellowContoursList) {
+//                analyzeContour(contour, input, YELLOW);
+//            }
+//        } else if (processingColor == BLUE) {
+//            Core.extractChannel(YCbCrMat, CbMat, 2); // Cb channel index is 2
+//            Imgproc.threshold(CbMat, blueThresholdMat, BLUE_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
+//            morphMask(blueThresholdMat, morphedBlueThreshold);
+//            blueContoursList.clear();
+//            Imgproc.findContours(morphedBlueThreshold, blueContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+//            contoursOnPlainImageMat = Mat.zeros(input.size(), input.type());
+//            for(MatOfPoint contour : blueContoursList) {
+//                analyzeContour(contour, input, BLUE);
+//            }
+//        } else {
+//            Core.extractChannel(YCbCrMat, CbMat, 2); // Cb channel index is 2
+//            Imgproc.threshold(CrMat, redThresholdMat, RED_MASK_THRESHOLD, 255, Imgproc.THRESH_BINARY);
+//            morphMask(redThresholdMat, morphedRedThreshold);
+//            redContoursList.clear();
+//            Imgproc.findContours(morphedRedThreshold, redContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
+//            contoursOnPlainImageMat = Mat.zeros(input.size(), input.type());
+//            for(MatOfPoint contour : redContoursList) {
+//                analyzeContour(contour, input, RED);
+//            }
+//        }
         // Extract the Cb and Cr channels
         Core.extractChannel(YCbCrMat, CbMat, 2); // Cb channel index is 2
         Core.extractChannel(YCbCrMat, CrMat, 1); // Cr channel index is 1
@@ -242,13 +280,13 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         morphMask(yellowThresholdMat, morphedYellowThreshold);
 
         // Find contours in the masks
-        ArrayList<MatOfPoint> blueContoursList = new ArrayList<>();
+        blueContoursList.clear();
         Imgproc.findContours(morphedBlueThreshold, blueContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
 
-        ArrayList<MatOfPoint> redContoursList = new ArrayList<>();
+        redContoursList.clear();
         Imgproc.findContours(morphedRedThreshold, redContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
 
-        ArrayList<MatOfPoint> yellowContoursList = new ArrayList<>();
+        yellowContoursList.clear();
         Imgproc.findContours(morphedYellowThreshold, yellowContoursList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
 
         // Create a plain image for drawing contours

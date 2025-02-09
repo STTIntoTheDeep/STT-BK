@@ -220,23 +220,23 @@ public class hardware {
         intakeGrip(0.76),
         intakeRelease(0.44),
         wristTransfer(0.39),
-        wristSampleCamera(0.125),
+        wristSampleCamera(0.119),
         wristSpecimenCamera(0.71),
         keepSlides(0.5),
         releaseSlides(0),
 
         outtakeGrip(0.54),
         outtakeRelease(0.0),
-        shoulderTransfer(0.0),
+        shoulderTransfer(0.02),
         shoulderForward(0.82),
         shoulderBack(0.34),
 
-        elbowLeft(new double[] {0.80,-0.07}),
-        elbowRight(new double[] {0.28,-0.07}),
-        elbowCentered(new double[]{0.53,-0.07}),
-        elbowTransfer(new double[]{0.53, 0.41}),
-        cameraDown(new double[]{0.53,0.18}),
-        cameraWide(new double[]{0.53,0.34});
+        elbowLeft(new double[] {0.77,-0.06}),
+        elbowRight(new double[] {0.265,-0.04}),
+        elbowCentered(new double[]{0.51,-0.04}),
+        elbowTransfer(new double[]{0.51, 0.41}),
+        cameraDown(new double[]{0.51,0.18}),
+        cameraWide(new double[]{0.51,0.34});
 
         servoPositions(double position) {this.position = position;}
         private double position;

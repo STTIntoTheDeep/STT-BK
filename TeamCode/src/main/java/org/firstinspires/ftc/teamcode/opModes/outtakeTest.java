@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
 
 //TODO: remove @Config
@@ -16,20 +15,26 @@ public class outtakeTest extends rootOpMode {
     Gamepad previousGamepad = new Gamepad();
 
     public static int target;
+    public static double shoulder = 0.0;
 
     int sampleStates = 0;
 
     double timer, outtakeRightPos, outtakeLeftPos;
 
-    boolean specimenMode = true;
+    boolean specimenMode = true, shoulderBack;
 
     @Override
     public void runOpMode() {
-        initialize(true);
+        initialize(false);
         hardware.motors.outtakeLeft.dcMotorEx.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hardware.motors.outtakeLeft.dcMotorEx.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         hardware.motors.outtakeRight.dcMotorEx.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hardware.motors.outtakeRight.dcMotorEx.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        hardware.reduceHardwareCalls = false;
+        intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+        hardware.servos.wrist.setServo(hardware.servoPositions.wristTransfer);
+        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+        hardware.reduceHardwareCalls = true;
 
         waitForStart();
         if (isStopRequested()) return;
@@ -93,7 +98,15 @@ public class outtakeTest extends rootOpMode {
 //                    (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
 //                            ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip
 //            );
-            outtake.scoreSpecimen(currentGamepad.a && !previousGamepad.a && !currentGamepad.options);
+
+//            if (currentGamepad.y && !previousGamepad.y) {
+//                shoulderBack ^= true;
+//                hardware.servos.shoulder.setServo((shoulderBack) ? hardware.servoPositions.shoulderBack : hardware.servoPositions.shoulderTransfer);
+//            }
+            hardware.servos.shoulder.setServo(shoulder);
+            telemetry.addData("shoulderPos", hardware.servos.shoulder.getLastPosition());
+            outtake.slidePID(target);
+//            outtake.scoreSpecimen(currentGamepad.a && !previousGamepad.a && !currentGamepad.options);
             //TODO: sequence + triggers
 //            if (!outtake.buttonMode && currentGamepad.a && !previousGamepad.a && !currentGamepad.options) outtake.buttonMode = true;
 //            if (outtake.buttonMode) {
@@ -128,8 +141,8 @@ public class outtakeTest extends rootOpMode {
 
             //TODO: add rumble
 
-            follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-            follower.update();
+//            follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+//            follower.update();
 //            telemetry.addData("left stick", -currentGamepad.left_stick_y);
 //            telemetry.addData("right stick", -currentGamepad.right_stick_y);
 //            telemetry.addData("left trigger", currentGamepad.left_trigger);

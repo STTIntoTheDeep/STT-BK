@@ -966,4 +966,6 @@ public class Follower {
     private void resetIMU() throws InterruptedException {
         poseUpdater.resetIMU();
     }
+
+    public double getCurrentPos(){return getCurrentPos();}
 }

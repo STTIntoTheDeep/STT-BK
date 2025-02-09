@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
  * TODO: documentation
  * @author Dean van Beek - 3977 Stanislas Tech Team
  */
+@Config
 public class Intake {
 
     /**
@@ -23,7 +24,7 @@ public class Intake {
     }
 
     //TODO: squid?
-    private final CustomPIDFCoefficients intakePIDFCoefficients = new CustomPIDFCoefficients(
+    public static CustomPIDFCoefficients intakePIDFCoefficients = new CustomPIDFCoefficients(
             0.02,
             0.0,
             0.0,
@@ -31,11 +32,9 @@ public class Intake {
 
     private final PIDFController pid = new PIDFController(intakePIDFCoefficients);
 
-    final double slideExtension = 72;
-    public final double ticksPerCM = 756/slideExtension;
-    final double baseLength = 37.0, maxLength = 108.0;
-    public final double armLength = 15.1;
-    double elbowAngle;
+    final double baseLength = 37.0, maxLength = 108.0, slideExtension = 72;
+    public final double ticksPerCM = 756/slideExtension, armLength = 13.6;
+    double elbowAngle, lastLeftPos, lastRightPos, lastWristPos;
 
     /**
      * TODO: documentation
@@ -81,10 +80,10 @@ public class Intake {
      * TODO: documentation
      * @param cm
      */
-    public void elbowYDistance(double cm) {
+    public double elbowYDistance(double cm) {
         elbowAngle = Math.acos(cm/armLength);
-        elbowAngle = hardware.servoPositions.elbowRight.getDifferential()[0] + (hardware.servoPositions.elbowLeft.getDifferential()[0] - hardware.servoPositions.elbowRight.getDifferential()[0]) * elbowAngle / Math.PI;
-        setElbow(elbowAngle, hardware.servoPositions.elbowCentered.getDifferential()[1]);
+        return setElbow(hardware.servoPositions.elbowRight.getDifferential()[0] + (hardware.servoPositions.elbowLeft.getDifferential()[0] - hardware.servoPositions.elbowRight.getDifferential()[0]) * elbowAngle / Math.PI,
+                hardware.servoPositions.elbowRight.getDifferential()[1] + (hardware.servoPositions.elbowLeft.getDifferential()[1] - hardware.servoPositions.elbowRight.getDifferential()[1]) * elbowAngle / Math.PI);
     }
 
     /**
@@ -92,9 +91,27 @@ public class Intake {
      * This is relative to the camera, which moves with the wrist.
      * @param theta
      */
-    public void wristToAngle(double theta) {
-        if (theta > Math.PI) theta -= 2*Math.PI;
-        hardware.servos.wrist.setServo(hardware.servoPositions.wristTransfer.getPosition() + (hardware.servoPositions.wristSpecimenCamera.getPosition() - hardware.servoPositions.wristSampleCamera.getPosition()) * theta/Math.PI);
+    public double wristToAngle(double theta) {
+        double halfRotationInPos = hardware.servoPositions.wristSpecimenCamera.getPosition() - hardware.servoPositions.wristSampleCamera.getPosition();
+        lastWristPos = hardware.servos.wrist.getLastPosition();
+
+        theta = (theta * halfRotationInPos) / Math.PI;
+        theta = theta + 0.5*halfRotationInPos + hardware.servoPositions.wristSampleCamera.getPosition();
+        while (theta < 0.0) theta += halfRotationInPos;
+        if (theta < 1.0 - halfRotationInPos) {
+            if (Math.abs(theta - lastWristPos) > Math.abs(theta + halfRotationInPos - lastWristPos)) {
+                theta += halfRotationInPos;
+            }
+        }
+
+        while (theta > 1.0) theta -= halfRotationInPos;
+        if (theta > 0.0 + halfRotationInPos) {
+            if (Math.abs(theta - lastWristPos) > Math.abs(theta - halfRotationInPos - lastWristPos)) {
+                theta -= halfRotationInPos;
+            }
+        }
+        hardware.servos.wrist.setServo(theta);
+        return 1200 * Math.abs(theta - lastWristPos);
     }
 
     /**
@@ -102,18 +119,21 @@ public class Intake {
      * @param yaw
      * @param pitch
      */
-    public void setElbow(double yaw, double pitch) {
+    public double setElbow(double yaw, double pitch) {
+        lastLeftPos = hardware.servos.elbowLeft.getLastPosition();
+        lastRightPos = hardware.servos.elbowLeft.getLastPosition();
         hardware.servos.elbowLeft.setServo(yaw - pitch);
         hardware.servos.elbowRight.setServo(yaw + pitch);
+        return 500*Math.max(Math.abs(hardware.servos.elbowLeft.getLastPosition() - lastLeftPos), Math.abs(hardware.servos.elbowLeft.getLastPosition() - lastRightPos));
     }
 
-    public void setElbow(double[] positions) {setElbow(positions[0], positions[1]);}
+    public double setElbow(double[] positions) {return setElbow(positions[0], positions[1]);}
 
     /**
      * TODO: documentation
      * @return
      */
-    public boolean PIDReady() {return pid.getError() < 5;}
+    public boolean PIDReady() {return pid.getError() < 10;}
 
     /**
      * TODO: documentation

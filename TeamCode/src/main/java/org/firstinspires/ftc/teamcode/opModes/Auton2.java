@@ -27,8 +27,10 @@ public class Auton2 extends rootOpMode {
 
         while (opModeIsActive()) {
             follower.update();
+            follower.telemetryDebug(telemetry);
 
             telemetry.addData("mode", specimenMode);
+//            telemetry.addData("Pos", Follower.g)
             telemetry.update();
         }
     }

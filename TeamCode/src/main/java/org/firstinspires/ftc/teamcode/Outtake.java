@@ -24,11 +24,12 @@ public class Outtake {
     }
     public enum slidePositions {
         DOWN(0),
-        TRANSFER(200),
+        TRANSFER(220),
         HIGH_RUNG(1050),
         LOW_BASKET(1450),
         HIGH_BASKET(2300),
-        CLEARS_ROBOT(500),
+        CLEARS_INTAKE(400),
+        CLEARS_ROBOT(750),
         LOWER_LIMIT(0),
         UPPER_LIMIT(2300);
 
@@ -58,7 +59,7 @@ public class Outtake {
     public boolean reset = false, buttonMode = false;
 
     public static CustomPIDFCoefficients outtakePIDFCoefficients = new CustomPIDFCoefficients(
-            0.008,
+            0.011,
             0.0,
             0.0,
             0);
@@ -190,7 +191,7 @@ public class Outtake {
         setSlides(false);
     }
 
-    public boolean PIDReady() {return left.getError() < 50 && right.getError() < 15;}
+    public boolean PIDReady() {return left.getError() < 45 && right.getError() < 45;}
 
     /**
      * @param power

@@ -13,9 +13,9 @@ import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
-import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathBuilder;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -36,15 +36,15 @@ public abstract class rootOpMode extends LinearOpMode {
 
     protected double[] bestSampleInformation;
 
-    protected enum intakeStates {IDLE, EXTEND, FIND, ROTATE, DOWN, MOVE, GRAB, CHECK, PRE_DONE, DONE, WRONG}
+    protected enum intakeStates {IDLE, FIND, ROTATE, DOWN, MOVE, GRAB, BACK, CHECK, PRE_DONE, DONE, WRONG}
     protected intakeStates intakeState = intakeStates.IDLE;
 
-    protected enum transferStates{IDLE, UP, WAIT, DOWN, TRANSFER, PRE_DONE, DONE}
+    protected enum transferStates{IDLE, UP, DOWN, TRANSFER, UP_AGAIN, BACK, DOWN_AGAIN, PRE_DONE, DONE}
     protected transferStates transferState = transferStates.IDLE;
 
-    protected double intakeTimer, transferTimer, currentSlideCM = 0, transferDelay;
+    protected double transferTimer, transferDelay, continueTime, slideTarget;
 
-    protected boolean TeleOp, changingMode;
+    protected boolean TeleOp, changingMode, specimenMode = true;
 
     protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
@@ -105,6 +105,7 @@ public abstract class rootOpMode extends LinearOpMode {
         double scoreSpecimenX = 39.701;
         Point specimenPickUp = new Point(8.455, 32.235, Point.CARTESIAN);
 
+        follower.setStartingPose(new Pose(8.191, 56.279, 0));
         path1 = follower.pathBuilder().addPath(
             // Score first specimen
             new BezierLine(
@@ -253,6 +254,8 @@ public abstract class rootOpMode extends LinearOpMode {
             .build();
         }
 
+
+
     /**
      * TODO: documentation
      * @param toSpecimenMode
@@ -264,75 +267,6 @@ public abstract class rootOpMode extends LinearOpMode {
         else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
         changingMode = false;
         //TODO: rumble
-    }
-
-    /**
-     * TODO: documentation
-     */
-    protected void transferSample() {
-        switch (transferState) {
-            case IDLE:
-                break;
-            case UP:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_ROBOT.getPosition());
-                intake.slidePID(0);
-
-                if (hardware.servos.wrist.getLastPosition() != hardware.servoPositions.wristTransfer.getPosition()) {
-                    transferState = transferStates.WAIT;
-                    transferTimer = System.currentTimeMillis();
-                    transferDelay = 150;
-                    hardware.servos.wrist.setServo(hardware.servoPositions.wristTransfer);
-                    break;
-                }
-
-                if (!outtake.PIDReady() || !intake.PIDReady()) break;
-                transferDelay = 0;
-
-                if (hardware.servos.shoulder.getLastPosition() != hardware.servoPositions.shoulderTransfer.getPosition()) {
-                    transferState = transferStates.WAIT;
-                    transferTimer = System.currentTimeMillis();
-                    transferDelay = 300;
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-                    break;
-                }
-
-                if (hardware.servos.outtakeClaw.getLastPosition() != hardware.servoPositions.outtakeRelease.getPosition()) {
-                    transferState = transferStates.WAIT;
-                    transferTimer = System.currentTimeMillis();
-                    transferDelay = 150;
-                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
-                    break;
-                }
-
-                transferState = transferStates.DOWN;
-                break;
-            case WAIT:
-                if (transferTimer + transferDelay < System.currentTimeMillis()) transferState = transferStates.DOWN;
-                break;
-            case DOWN:
-                outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                if (outtake.PIDReady()) transferState = transferStates.TRANSFER;
-                break;
-            case TRANSFER:
-                hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-                hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                transferTimer = System.currentTimeMillis();
-                transferState = transferStates.DONE;
-                break;
-            case PRE_DONE:
-                if (transferTimer + 200 < System.currentTimeMillis()) transferState = transferStates.DONE;
-                break;
-            case DONE:
-                transferState = transferStates.IDLE;
-                break;
-        }
-    }
-
-    /**
-     * TODO: documentation
-     */
-    protected void transferSpecimen() {
-        transferSample();
     }
 
     /**
@@ -372,87 +306,76 @@ public abstract class rootOpMode extends LinearOpMode {
 
     /**
      * TODO: documentation
-     * @param reset only for TeleOp
-     * @param powerOrPos power only for TeleOp
+     * @param next
+     * @param reset
      */
-    protected void intakeSequence(boolean reset, double powerOrPos) {
+    public void simpleIntakeSequence(boolean next, boolean reset, double powerOrPos) {
+        if (next) {
+            if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
+                samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+                intakeState = intakeStates.FIND;
+                samplePipeline.saveRAM = false;
+                sampleCamera();
+            } else if (intakeState == intakeStates.FIND && bestSampleInformation != null) {
+                samplePipeline.saveRAM = true;
+                hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+                continueTime = 500 + System.currentTimeMillis() + intake.wristToAngle(Math.toRadians(bestSampleInformation[2]) + 0.5*Math.PI - Math.acos(bestSampleInformation[0]/intake.armLength));
+                intake.setElbow(new double[] {hardware.servoPositions.elbowCentered.getDifferential()[0], 0.0});
+                slideTarget = intake.getSlideLength() + bestSampleInformation[1] - intake.armLength*Math.sin(Math.acos(-bestSampleInformation[0]/intake.armLength));
+                intakeState = intakeStates.DOWN;
+            } else if (intakeState == intakeStates.DONE) intakeState = intakeStates.IDLE;
+        }
+
+        if (reset) {}
+
         switch (intakeState) {
             case IDLE:
-                if (intake.PIDReady()) break;
-                else intake.slidePID(0);
-                break;
-            case EXTEND:
-                if (TeleOp) {
-                    hardware.motors.intake.setPower(powerOrPos);
-                }
-                else {
-                    intake.slidePID(powerOrPos);
-                    if (intake.PIDReady()) {
-                        intakeState = intakeStates.FIND;
-                        sampleCamera();
-//                        camera.resumeViewport();
-                        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                    }
-                }
+                if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
                 break;
             case FIND:
+                if (TeleOp) {
+                    hardware.motors.intake.setPower(Math.max(powerOrPos, -0.5));
+                } else intake.slidePID(powerOrPos);
                 if (chooseSample()) {
-                    intakeState = intakeStates.DOWN;
-//                    camera.pauseViewport();
-                    intake.wristToAngle(Math.toRadians(bestSampleInformation[2]));
+                    if (TeleOp) {
+                        //TODO: rumble
+                    } else intakeState = intakeStates.DOWN;
                 }
                 break;
             case DOWN:
-                currentSlideCM = hardware.motors.intake.dcMotorEx.getCurrentPosition() / intake.ticksPerCM;
-                intake.slideCM(currentSlideCM + bestSampleInformation[0]);
-                intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
-                intakeTimer = System.currentTimeMillis();
+                intake.slideCM(slideTarget);
+                if (continueTime < System.currentTimeMillis()) {
+                    continueTime = System.currentTimeMillis() + intake.elbowYDistance(bestSampleInformation[0]) + 250;
+                    intakeState = intakeStates.MOVE;
+                }
                 break;
             case MOVE:
-                intake.slideCM(currentSlideCM + bestSampleInformation[0]);
-                if (intakeTimer + 200 < System.currentTimeMillis()) {
-                    intake.elbowYDistance(bestSampleInformation[1]);
-                    intake.wristToAngle(bestSampleInformation[2]);
-                    intakeTimer = System.currentTimeMillis();
+                intake.slideCM(slideTarget);
+                if (intake.PIDReady() && continueTime < System.currentTimeMillis()) {
+                    hardware.servos.intake.setServo(hardware.servoPositions.intakeGrip);
+                    continueTime = System.currentTimeMillis() + 300;
                     intakeState = intakeStates.GRAB;
                 }
                 break;
             case GRAB:
-                intake.slideCM(currentSlideCM + bestSampleInformation[0]);
-                if (intakeTimer + 200 < System.currentTimeMillis() && intake.PIDReady()) {
-                    hardware.servos.intake.setServo(hardware.servoPositions.intakeGrip);
-                    intakeState = intakeStates.CHECK;
+                if (continueTime < System.currentTimeMillis()) {
+                    intakeState = intakeStates.BACK;
+                    continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
+                    hardware.servos.wrist.setServo(hardware.servoPositions.wristTransfer);
                 }
                 break;
-            case CHECK:
-                if (checkSample()) {
-                    intakeState = intakeStates.DONE;
-                    intake.slidePID(0);
-                    intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
-                } else {
-                    intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
-                    intakeState = intakeStates.WRONG;
+            case BACK:
+                if (continueTime < System.currentTimeMillis()) {
+                    intakeState = intakeStates.PRE_DONE;
+                    continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
                 }
-                intakeTimer = System.currentTimeMillis();
                 break;
             case PRE_DONE:
                 intake.slidePID(0);
-                if (intakeTimer + 200 < System.currentTimeMillis()) intakeState = intakeStates.DONE;
-                break;
-            case DONE:
-                intakeState = intakeStates.IDLE;
-            case WRONG:
-                if (intakeTimer + 200 < System.currentTimeMillis()) {
-                    hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                    intakeState = intakeStates.FIND;
+                if (continueTime < System.currentTimeMillis() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 40) {
+                    intakeState = intakeStates.DONE;
                 }
                 break;
-        }
-        if (reset) {
-            intakeState = intakeStates.IDLE;
-            intake.slidePID(0);
-            intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
-            hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
         }
     }
 
@@ -475,9 +398,9 @@ public abstract class rootOpMode extends LinearOpMode {
     protected void sampleCamera() {
         intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
         hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
-        samplePipeline.cameraZPos = 25.8;
-        samplePipeline.cameraAlpha = 0.0;
-        samplePipeline.cameraXPos = 8.3;
+        samplePipeline.cameraZPos = 22.0;
+        samplePipeline.cameraAlpha = -0.6;
+        samplePipeline.cameraXPos = 9.0;
         samplePipeline.AREA_LOWER_LIMIT = 9000;
         //TODO: change maximum area
     }

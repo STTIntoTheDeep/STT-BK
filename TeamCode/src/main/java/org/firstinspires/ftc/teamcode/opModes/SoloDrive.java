@@ -5,12 +5,10 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
-import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 
 @TeleOp(name = "SoloDrive",group = "TeleOp")
 public class SoloDrive extends rootOpMode {
-    boolean specimenMode = true, high, goDown = false;
+    boolean high, goDown = false;
     int rumbleStates, ledStates;
 
     // By setting these values to new Gamepad(), they will default to all
@@ -42,26 +40,33 @@ public class SoloDrive extends rootOpMode {
             if (changingMode) changeMode(specimenMode);
 
 
-            if (currentGamepad.x && !previousGamepad.x) {
-                if (intakeState == intakeStates.IDLE) {
-                    samplePipeline.desiredColor = allianceColor;
-                    intakeState = intakeStates.EXTEND;
-                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-            }
-
-            if (currentGamepad.a && !previousGamepad.a && !specimenMode) {
-                if (intakeState == intakeStates.IDLE) {
-                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-                    intakeState = intakeStates.EXTEND;
-                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-            }
+//            if (currentGamepad.x && !previousGamepad.x) {
+//                if (intakeState == intakeStates.IDLE) {
+//                    samplePipeline.desiredColor = allianceColor;
+//                    intakeState = intakeStates.EXTEND;
+//                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
+//            }
+//
+//            if (currentGamepad.a && !previousGamepad.a && !specimenMode) {
+//                if (intakeState == intakeStates.IDLE) {
+//                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+//                    intakeState = intakeStates.EXTEND;
+//                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
+//            }
 
             //TODO: add rumble
             if (intakeState == intakeStates.DONE && !specimenMode) transferState = transferStates.UP;
 
-            outtake();
+            if (!(transferState == transferStates.IDLE || transferState == transferStates.DONE)) {
 
-            intakeSequence( currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
+            } else {
+                if (changingMode) {
+
+                } else {
+                    TeleOpOuttake();
+                }
+            }
+            simpleIntakeSequence( currentGamepad.a && !previousGamepad.a, currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
 
             follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
             follower.update();
@@ -71,12 +76,9 @@ public class SoloDrive extends rootOpMode {
         }
     }
 
-    private void outtake() {
+    private void TeleOpOuttake() {
         // Not allowed to move the outtake while transferring or changing mode
         // TODO: if buttons pressed, buttonMode true and state to UP (outtake)
-        if (changingMode) return;
-        if (!(transferState == transferStates.IDLE || transferState == transferStates.DONE)) return;
-
         if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
             outtake.buttonMode = true;
             high = true;
@@ -121,9 +123,9 @@ public class SoloDrive extends rootOpMode {
             }
         }
         if (specimenMode) {
-            transferSpecimen();
+//            transferSpecimen();
         } else {
-            transferSample();
+//            transferSample();
         }
     }
 }

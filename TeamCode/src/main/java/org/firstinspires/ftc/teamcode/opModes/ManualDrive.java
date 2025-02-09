@@ -40,27 +40,10 @@ public class ManualDrive extends rootOpMode {
             }
             if (changingMode) changeMode(specimenMode);
 
-
-            if (currentGamepad.x && !previousGamepad.x) {
-                if (intakeState == intakeStates.IDLE) {
-                    samplePipeline.desiredColor = allianceColor;
-                    intakeState = intakeStates.EXTEND;
-                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-            }
-
-            if (currentGamepad.a && !previousGamepad.a && !specimenMode) {
-                if (intakeState == intakeStates.IDLE) {
-                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-                    intakeState = intakeStates.EXTEND;
-                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-            }
-
             //TODO: add rumble
             if (intakeState == intakeStates.DONE && !specimenMode) transferState = transferStates.UP;
 
             outtake();
-
-            intakeSequence( currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
 
             follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
             follower.update();
@@ -120,9 +103,9 @@ public class ManualDrive extends rootOpMode {
             }
         }
         if (specimenMode) {
-            transferSpecimen();
+//            transferSpecimen();
         } else {
-            transferSample();
+//            transferSample();
         }
     }
 }
