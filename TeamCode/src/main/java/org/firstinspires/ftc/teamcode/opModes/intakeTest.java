@@ -13,7 +13,6 @@ public class intakeTest extends rootOpMode {
     Gamepad currentGamepad = new Gamepad();
     Gamepad previousGamepad = new Gamepad();
 
-    boolean open = true;
     public static int target = 0;
     public static double cm = 0, pitch = 0.18, yaw = 0.51, angle, backPower = -0.25;
     //pitch -0.135 is down, 0.35 is transfer, 0.14 is camera 0, 0.245 is camera 45 degree
