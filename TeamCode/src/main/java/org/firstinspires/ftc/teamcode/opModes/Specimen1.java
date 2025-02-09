@@ -2,83 +2,83 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Auton1",group = "Autonomous")
-public class Auton1 extends rootOpMode {
+import org.firstinspires.ftc.teamcode.hardware;
+
+@Autonomous(name = "0+0 spec",group = "Autonomous")
+public class Specimen1 extends rootOpMode {
     boolean specimenMode = true, high, goDown = false;
     int state = 0;
 
     @Override
     public void runOpMode() {
         initialize(false);
+        specimenPaths();
+        follower.setMaxPower(0.6);
+        follower.followPath(path1, true);
+
         while (!isStarted()) {
             chooseSample();
         }
 
         if (isStopRequested()) return;
         while (opModeIsActive()) {
+            follower.update();
             switch (state) {
                 case 0:
-                    follower.followPath(path1, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path2, true);
                         state++;
                     }
                     break;
                 case 1:
-                    follower.followPath(path2, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path3, true);
                         state++;
                     }
                     break;
                 case 2:
-                    follower.followPath(path3, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path4, true);
                         state++;
                     }
                     break;
                 case 3:
-                    follower.followPath(path4, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path5, true);
                         state++;
                     }
                     break;
                 case 4:
-                    follower.followPath(path5, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path6, true);
                         state++;
                     }
                     break;
                 case 5:
-                    follower.followPath(path6, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path7, true);
                         state++;
                     }
                     break;
                 case 6:
-                    follower.followPath(path7, true);
-                    follower.update();
                     if (!follower.isBusy()) {
+                        follower.followPath(path8, true);
                         state++;
                     }
                     break;
                 case 7:
-                    follower.followPath(path8, true);
-                    follower.update();
                     if (!follower.isBusy()) {
                         state++;
                     }
                     break;
                 }
-
-            follower.update();
             follower.telemetryDebug(telemetry);
 
             telemetry.addData("mode", specimenMode);
+            telemetry.addData("leftFront", hardware.motors.leftFront.getLastPower());
+            telemetry.addData("rightFront", hardware.motors.rightFront.getLastPower());
+            telemetry.addData("leftBack", hardware.motors.leftBack.getLastPower());
+            telemetry.addData("rightBack", hardware.motors.rightBack.getLastPower());
             telemetry.update();
         }
     }

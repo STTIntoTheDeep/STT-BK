@@ -48,7 +48,7 @@ public abstract class rootOpMode extends LinearOpMode {
 
     protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
-    protected PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11;
+    protected PathChain path1, path2, path3, path4, path5, path6, path7, path8;
     /**
      * TODO: documentation
      * @param TeleOp
@@ -94,7 +94,6 @@ public abstract class rootOpMode extends LinearOpMode {
         FtcDashboard.getInstance().startCameraStream(camera, 30);
 
         if (!TeleOp) {
-            specimenPaths();
             return;
         }
         wideCamera();
@@ -102,8 +101,8 @@ public abstract class rootOpMode extends LinearOpMode {
     }
 
     protected void specimenPaths() {
-        double scoreSpecimenX = 39.701;
-        Point specimenPickUp = new Point(8.455, 32.235, Point.CARTESIAN);
+        double scoreSpecimenX = 39;
+        Point specimenPickUp = new Point(16 , 32.235, Point.CARTESIAN);
 
         follower.setStartingPose(new Pose(8.191, 56.279, 0));
         path1 = follower.pathBuilder().addPath(
@@ -120,43 +119,43 @@ public abstract class rootOpMode extends LinearOpMode {
                     new Point(scoreSpecimenX, 67.738, Point.CARTESIAN),
                     new Point(3.963, 45.446, Point.CARTESIAN),
                     new Point(13.211, 26.422, Point.CARTESIAN),
-                    new Point(69.226, 43.068, Point.CARTESIAN),
-                    new Point(60.242, 28.272, Point.CARTESIAN)))
+                    new Point(65.527, 36.198, Point.CARTESIAN),
+                    new Point(60.242, 27, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Score in wing
                     new BezierLine(
-                        new Point(60.242, 28.272, Point.CARTESIAN),
-                        new Point(17.703, 28.272, Point.CARTESIAN)
+                        new Point(60.242, 27, Point.CARTESIAN),
+                        new Point(21, 27, Point.CARTESIAN)
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Score second blue sample in wing
                     new BezierCurve(
-                        new Point(17.703, 28.272, Point.CARTESIAN),
+                        new Point(21, 27, Point.CARTESIAN),
                         new Point(75.567, 33.292, Point.CARTESIAN),
                         new Point(75.303, 8.191, Point.CARTESIAN),
-                        new Point(16.382, 17.439, Point.CARTESIAN)
+                            new Point(21, 16, Point.CARTESIAN)
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Score third blue sample in wing
                     new BezierCurve(
-                        new Point(16.382, 17.439, Point.CARTESIAN),
+                        new Point(21, 16, Point.CARTESIAN),
                         new Point(79.266, 24.044, Point.CARTESIAN),
-                        new Point(75.567, 1.321, Point.CARTESIAN),
-                        new Point(16.117, 10.833, Point.CARTESIAN)
+                        new Point(75.567, 2, Point.CARTESIAN),
+                        new Point(21, 5, Point.CARTESIAN)
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Get second specimen
                     new BezierCurve(
-                        new Point(16.117, 10.833, Point.CARTESIAN),
+                        new Point(21, 5, Point.CARTESIAN),
                         new Point(36.462, 29.593, Point.CARTESIAN),
-                        new Point(8.455, 32.235, Point.CARTESIAN)
+                        specimenPickUp
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -219,47 +218,46 @@ public abstract class rootOpMode extends LinearOpMode {
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0)).build();
-
-        //BasketAuton
-        path9 = follower.pathBuilder()
+        }
+    protected void samplePaths() {
+        follower.setStartingPose(new Pose(8.455, 104.103, 0));
+        path1 = follower.pathBuilder()
             .addPath(
                 // Go to basket
                 new BezierLine(
-                    new Point(8.854, 80.203, Point.CARTESIAN),
-                    new Point(15.624, 128.376, Point.CARTESIAN)
-                    )
+                    new Point(8.455, 104.103, Point.CARTESIAN),
+                    new Point(14.004, 131.846, Point.CARTESIAN)
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-14))
+            )
+            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-17))
             .build();
-        path10 = follower.pathBuilder()
+        path2 = follower.pathBuilder()
             .addPath(
                 // go to second and third sample
                 new BezierLine(
-                    new Point(15.624, 128.376, Point.CARTESIAN),
-                    new Point(16.145, 135.928, Point.CARTESIAN)
-                    )
+                    new Point(14.004, 131.846, Point.CARTESIAN),
+                    new Point(15.061, 134.752, Point.CARTESIAN)
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-14), Math.toRadians(0))
+            )
+            .setConstantHeadingInterpolation(0)
             .build();
-        path11 = follower.pathBuilder()
+        path3 = follower.pathBuilder()
             .addPath(
                 // Go to observation zone
                 new BezierCurve(
-                    new Point(16.145, 135.928, Point.CARTESIAN),
-                    new Point(62.495, 108.065, Point.CARTESIAN),
+                    new Point(15.061, 134.752, Point.CARTESIAN),
+                    new Point(64, 112, Point.CARTESIAN),
                     new Point(60.673, 95.045, Point.CARTESIAN)
-                    )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
+            )
+            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
             .build();
-        }
+    }
 
-
-
-    /**
-     * TODO: documentation
-     * @param toSpecimenMode
-     */
+        /**
+         * TODO: documentation
+         * @param toSpecimenMode
+         */
     protected void changeMode(boolean toSpecimenMode) {
         outtake.slidePID(Outtake.slidePositions.CLEARS_ROBOT.getPosition());
         if (!outtake.PIDReady()) return;
