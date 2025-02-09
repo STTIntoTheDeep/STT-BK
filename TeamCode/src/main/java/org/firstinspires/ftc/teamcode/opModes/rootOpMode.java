@@ -220,26 +220,32 @@ public abstract class rootOpMode extends LinearOpMode {
                 .setConstantHeadingInterpolation(Math.toRadians(0)).build();
         }
     protected void samplePaths() {
-        follower.setStartingPose(new Pose(8.455, 104.103, 0));
+        follower.setStartingPose(new Pose(8, 102, 0));
         path1 = follower.pathBuilder()
             .addPath(
                 // Go to basket
                 new BezierLine(
-                    new Point(8.455, 104.103, Point.CARTESIAN),
-                    new Point(14.004, 131.846, Point.CARTESIAN)
+                    new Point(8, 102, Point.CARTESIAN),
+                    new Point(8, 125, Point.CARTESIAN)
                 )
             )
-            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-17))
+            .setConstantHeadingInterpolation(Math.toRadians(0))
+            .addPath(new BezierLine(
+                new Point(8, 125, Point.CARTESIAN),
+                new Point(8, 125, Point.CARTESIAN)
+                )
+            )
+            .setConstantHeadingInterpolation(-20)
             .build();
         path2 = follower.pathBuilder()
             .addPath(
                 // go to second and third sample
                 new BezierLine(
-                    new Point(14.004, 131.846, Point.CARTESIAN),
-                    new Point(15.061, 134.752, Point.CARTESIAN)
+                    new Point(8, 125, Point.CARTESIAN),
+                    new Point(10, 130, Point.CARTESIAN)
                 )
             )
-            .setConstantHeadingInterpolation(0)
+            .setLinearHeadingInterpolation(Math.toRadians(-15), Math.toRadians(0))
             .build();
         path3 = follower.pathBuilder()
             .addPath(

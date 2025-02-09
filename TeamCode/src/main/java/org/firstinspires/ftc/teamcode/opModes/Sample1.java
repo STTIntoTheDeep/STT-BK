@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
+
 @Autonomous(name = "Sample1",group = "Autonomous")
 public class Sample1 extends rootOpMode {
     boolean specimenMode = true, high, goDown = false;
@@ -24,14 +26,15 @@ public class Sample1 extends rootOpMode {
                 case 0:
                     if (!follower.isBusy()) {
                         follower.followPath(path2, true);
+                        follower.setMaxPower(1.0);
                         state++;
                     }
                     break;
                 case 1:
-//                    if (!follower.isBusy()) {
+                    if (!follower.isBusy()) {
 //                        follower.followPath(path3, true);
 //                        state++;
-//                    }
+                    }
                     break;
             }
             follower.telemetryDebug(telemetry);
