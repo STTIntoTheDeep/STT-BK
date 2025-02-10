@@ -52,13 +52,14 @@ public abstract class Drivetrain {
         Vector[] truePathingVectors = prioritizeVectors(correctivePower, headingPower, pathingPower, robotHeading);
 
 //        motorPowers = getDrivePowers(correctivePower, headingPower, pathingPower, robotHeading);
+        //TODO: if holding point and standing in place, don't do the feedforward thing, turn off motors completely
         motorPowers = calculateMotorPowers(truePathingVectors);
         setMotors();
     }
 
     /**
      * For robot centric TeleOp without centripetal force correction or testing opModes.
-     * @see /FIXME
+     * @see .FIXME
      * @param drive
      * @param rotate
      */

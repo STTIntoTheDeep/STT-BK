@@ -44,7 +44,7 @@ public abstract class rootOpMode extends LinearOpMode {
 
     protected double transferTimer, transferDelay, continueTime, slideTarget;
 
-    protected boolean TeleOp, changingMode, specimenMode = true;
+    protected boolean TeleOp, changingMode, specimenMode = true, intakeOpen = true;
 
     protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 

@@ -56,6 +56,22 @@ public class positionTune extends rootOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            previousGamepad.copy(currentGamepad);
+            currentGamepad.copy(gamepad1);
+
+            chooseSample();
+            intake.setElbow(yaw, pitch);
+            hardware.servos.wrist.setServo(wristAngle);
+            if (currentGamepad.a && !previousGamepad.a) {
+                intakeOpen ^= true;
+                hardware.servos.intake.setServo((intakeOpen) ? hardware.servoPositions.intakeRelease : hardware.servoPositions.intakeGrip);
+            }
+            if (currentGamepad.b && !previousGamepad.b) {
+                outtakeOpen ^= true;
+                hardware.servos.outtakeClaw.setServo((outtakeOpen) ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
+            }
+            intake.slidePID(intakeTarget);
+            outtake.slidePID(outtakeTarget);
             telemetry.addData("left pos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
             telemetry.addData("right pos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());
             telemetry.addData("outtake ready", outtake.PIDReady());
