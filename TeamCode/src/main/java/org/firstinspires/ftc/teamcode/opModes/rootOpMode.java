@@ -56,10 +56,8 @@ public abstract class rootOpMode extends LinearOpMode {
     protected void initialize(boolean TeleOp) {
         this.TeleOp = TeleOp;
         follower = new Follower(hardwareMap);
-        hardware.reduceHardwareCalls = false;
         intake = new Intake(hardwareMap, TeleOp);
         outtake = new Outtake(hardwareMap, TeleOp);
-        hardware.reduceHardwareCalls = true;
         hardware.motors.hook.initMotor(hardwareMap);
         hardware.motors.hook.dcMotorEx.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
@@ -96,7 +94,11 @@ public abstract class rootOpMode extends LinearOpMode {
         if (!TeleOp) {
             return;
         }
+        hardware.reduceHardwareCalls = false;
         wideCamera();
+        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+        hardware.reduceHardwareCalls = true;
         follower.startTeleOpDrive();
     }
 
@@ -267,16 +269,38 @@ public abstract class rootOpMode extends LinearOpMode {
             .build();
     }
 
+    /**
+     * TODO: documentation
+     */
+    protected void TeleOpOuttake(double power, boolean toggle) {
+        // Not allowed to move the outtake while transferring or changing mode
+
+        // Controls the outtake
+        outtake.leftPos = hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition();
+        outtake.rightPos = hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition();
+        outtake.slidesWithinLimits(power);
+        // Normally you'd want a rising edge detector here but the hardware wrapper already covers that.
+        // This code automatically moves the shoulder to the right position
+        if (specimenMode) {
+            if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
+                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+            else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
+        } else {
+            if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
+                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
+            else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+        }
+        // Outtake claw toggle
+        if (toggle) hardware.servos.outtakeClaw.setServo(
+                (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
+                        ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
+    }
+
         /**
          * TODO: documentation
          * @param toSpecimenMode
          */
     protected void changeMode(boolean toSpecimenMode) {
-        outtake.slidePID(Outtake.slidePositions.CLEARS_ROBOT.getPosition());
-        if (!outtake.PIDReady()) return;
-        if (toSpecimenMode) hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-        changingMode = false;
         //TODO: rumble
     }
 

@@ -121,7 +121,7 @@ public class SoloDrive extends rootOpMode {
                 if (changingMode) {
                     //TODO: change mode
                 } else {
-                    TeleOpOuttake();
+                    TeleOpOuttake(currentGamepad.right_trigger - currentGamepad.left_trigger, currentGamepad.right_bumper && !previousGamepad.right_bumper);
                 }
             }
             if (intakeState == intakeStates.IDLE || intakeState == intakeStates.DONE) {
@@ -145,28 +145,5 @@ public class SoloDrive extends rootOpMode {
             telemetry.addData("right pos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());
             telemetry.update();
         }
-    }
-
-    private void TeleOpOuttake() {
-        // Not allowed to move the outtake while transferring or changing mode
-
-        // Controls the outtake
-        outtake.leftPos = hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition();
-        outtake.rightPos = hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition();
-        // Normally you'd want a rising edge detector here but the hardware wrapper already covers that.
-        // This code automatically moves the shoulder to the right position
-        if (specimenMode) {
-            outtake.slidesWithinLimits(currentGamepad.right_trigger - currentGamepad.left_trigger, 1100);
-            if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-            else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-        } else {
-            outtake.slidesWithinLimits(currentGamepad.right_trigger - currentGamepad.left_trigger);
-            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        }
-        // Outtake claw toggle
-        if (currentGamepad.right_bumper && !previousGamepad.right_bumper) hardware.servos.outtakeClaw.setServo(
-            (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
-                ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
     }
 }
