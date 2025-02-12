@@ -693,7 +693,7 @@ public class Follower {
 
         double projection = 2 * driveErrors[1] - driveErrors[0];
 
-        driveKalmanFilter.update(rawDriveError - previousRawDriveError, projection);
+        driveKalmanFilter.update(projection, rawDriveError - previousRawDriveError);
 
         for (int i = 0; i < driveErrors.length - 1; i++) {
             driveErrors[i] = driveErrors[i + 1];

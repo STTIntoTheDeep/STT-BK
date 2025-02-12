@@ -49,78 +49,14 @@ public class intakeTest extends rootOpMode {
             }
             else if (currentGamepad.dpad_right) wideCamera();
 
-            simpleIntakeSequence(currentGamepad.a && !previousGamepad.a, false, -currentGamepad.left_stick_y);
+            manualIntakeSequence(currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
 
 //            if (transferState == transferStates.IDLE && !specimenMode && currentGamepad.a && !previousGamepad.a) {
 //                hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
 //                transferTimer = System.currentTimeMillis() + 250;
 //                transferState = transferStates.UP;
 //            }
-            //TODO: method when works
-            switch (transferState) {
-                case IDLE:
-                    if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;
-                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
-                    transferTimer = System.currentTimeMillis() + 250;
-                    break;
-                case UP:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-                        transferTimer = System.currentTimeMillis() + 250;
-                        transferState = transferStates.DOWN;
-                    }
-                    break;
-                case DOWN:
-                    if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
-                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-
-                        intake.slidePID(0);
-
-                        if (outtake.PIDReady() && intake.PIDReady() && transferTimer < System.currentTimeMillis()) {
-                            hardware.motors.intake.setPower(backPower);
-                            transferTimer = System.currentTimeMillis() + 400;
-                            outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                            hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-                            hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                            transferState = transferStates.TRANSFER;
-                        }
-                    } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    break;
-                case TRANSFER:
-                    hardware.motors.intake.setPower(backPower);
-                    outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                        transferState = transferStates.UP_AGAIN;
-                        intakeState = intakeStates.IDLE;
-                    }
-                    break;
-                case UP_AGAIN:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (outtake.PIDReady()) {
-                        transferState = transferStates.BACK;
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                        transferTimer = 300 + System.currentTimeMillis();
-                    }
-                    break;
-                case BACK:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (transferTimer < System.currentTimeMillis()) {
-                        transferState = transferStates.DOWN_AGAIN;
-                    }
-                    break;
-                case DOWN_AGAIN:
-                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                    if (outtake.PIDReady()) {
-                        transferState = transferStates.DONE;
-                    }
-                    break;
-                case DONE:
-                    //FIXME: this only runs once
-                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                    transferState = transferStates.IDLE;
-                    break;
-            }
+            transfer();
 //            if (intakeState == intakeStates.DONE && !specimenMode) transferState = transferStates.UP;
             if (transferState != transferStates.IDLE) {
 //                if (currentGamepad.a && !previousGamepad.a) {

@@ -32,7 +32,8 @@ public class Intake {
 
     private final PIDFController pid = new PIDFController(intakePIDFCoefficients);
 
-    final double baseLength = 37.0, maxLength = 108.0, slideExtension = 72;
+    private final double baseLength = 37.0;
+    final double maxLength = 108.0, slideExtension = 72;
     public final double ticksPerCM = 756/slideExtension, armLength = 13.6;
     double elbowAngle, lastLeftPos, lastRightPos, lastWristPos;
 
@@ -63,10 +64,13 @@ public class Intake {
      * @param target
      */
     public void slidePID(double target) {
-        pid.updateError(target - hardware.motors.intake.dcMotorEx.getCurrentPosition());
-        double power = pid.runPIDF();
 //        hardware.motors.intake.setPower(Math.signum(power) * Math.min(Math.abs(power), 0.7));
-        hardware.motors.intake.setPower(Math.max(power, -0.5));
+        hardware.motors.intake.setPower(Math.max(calculatePID(target), -0.5));
+    }
+
+    public double calculatePID(double target) {
+        pid.updateError(target - hardware.motors.intake.dcMotorEx.getCurrentPosition());
+        return pid.runPIDF();
     }
 
     /**
@@ -176,4 +180,16 @@ public class Intake {
      * @return
      */
     public boolean tooLong(double length) {return length > maxLength;}
+
+    /**
+     * TODO: documentation
+     * TODO: you can go further armLength isn't maximal but trigonometry
+     * @param power
+     */
+    public void slideWithinLimits(double power) {
+        if (power < 0) {
+            if (baseLength + getSlideLength() + armLength < maxLength) hardware.motors.intake.setPower(power);
+            else hardware.motors.intake.setPower(0);
+        } else hardware.motors.intake.setPower(0);
+    }
 }

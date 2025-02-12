@@ -7,26 +7,20 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Intake;
 import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
-import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
-import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.List;
 
 @TeleOp(name = "ManualDrive",group = "TeleOp")
 public class ManualDrive extends rootOpMode {
     Drivetrain drivetrain;
-    boolean specimenMode = true;
+    boolean specimenMode = true, clawHorizontal;
     int rumbleStates, ledStates;
 
     // By setting these values to new Gamepad(), they will default to all
@@ -58,7 +52,7 @@ public class ManualDrive extends rootOpMode {
         telemetry.setMsTransmissionInterval(25);
 
         hardware.reduceHardwareCalls = false;
-        wideCamera();
+        intake.setElbow(0.51, 0.34);
         hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
         hardware.reduceHardwareCalls = true;
@@ -78,134 +72,95 @@ public class ManualDrive extends rootOpMode {
 
             if (currentGamepad.options && !previousGamepad.options) {
                 specimenMode ^= true;
-                //TODO: if outtake doing anything, stop
             }
 
-            if (currentGamepad.a && !previousGamepad.a) {
-                if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
-                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-                    intakeState = intakeStates.DOWN;
-                    samplePipeline.saveRAM = false;
-                    sampleCamera();
-                } else if (intakeState == intakeStates.FIND) {
-                    intakeState = intakeStates.DOWN;
-                    intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
-                } else if (intakeState == intakeStates.DOWN) {
-                    hardware.servos.intake.setServo(hardware.servoPositions.intakeGrip);
-                    continueTime = System.currentTimeMillis() + 300;
-                    intakeState = intakeStates.GRAB;
-                } else if (intakeState == intakeStates.DONE) intakeState = intakeStates.IDLE;
+            if (currentGamepad.b && !previousGamepad.b) {
+                clawHorizontal ^= true;
+                hardware.servos.wrist.setServo((clawHorizontal) ? hardware.servoPositions.wristTransfer : hardware.servoPositions.wristSampleCamera);
             }
 
-            switch (intakeState) {
-                case IDLE:
-                    if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
-                    break;
-                case FIND:
-                    hardware.motors.intake.setPower(Math.max(-currentGamepad.right_stick_y, -0.5));
-                    break;
-                case MOVE:
-                    intake.slideCM(slideTarget);
-                    if (intake.PIDReady() && continueTime < System.currentTimeMillis()) {
-                        hardware.servos.intake.setServo(hardware.servoPositions.intakeGrip);
-                        continueTime = System.currentTimeMillis() + 300;
-                        intakeState = intakeStates.GRAB;
-                    }
-                    break;
-                case GRAB:
-                    if (continueTime < System.currentTimeMillis()) {
-                        intakeState = intakeStates.BACK;
-                        continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
-                        hardware.servos.wrist.setServo(hardware.servoPositions.wristTransfer);
-                    }
-                    break;
-                case BACK:
-                    if (continueTime < System.currentTimeMillis()) {
-                        intakeState = intakeStates.PRE_DONE;
-                        continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
-                    }
-                    break;
-                case PRE_DONE:
-                    intake.slidePID(0);
-                    if (continueTime < System.currentTimeMillis() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 40) {
-                        intakeState = intakeStates.DONE;
-                    }
-                    break;
-            }
+            manualIntakeSequence(currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
 
-            switch (transferState) {
-                case IDLE:
-                    if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;
-                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
-                    transferTimer = System.currentTimeMillis() + 250;
-                    break;
-                case UP:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
+            if (!specimenMode) {
+                switch (transferState) {
+                    case IDLE:
+                        if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;
+                        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
                         transferTimer = System.currentTimeMillis() + 250;
-                        transferState = transferStates.DOWN;
-                    }
-                    break;
-                case DOWN:
-                    if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
-                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-
-                        if (hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20) hardware.motors.intake.setPower(backPower);
-                        else intake.slidePID(0);
-
-                        if (outtake.PIDReady() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20) {
-                            hardware.motors.intake.setPower(backPower);
-                            transferTimer = System.currentTimeMillis() + 400;
-                            outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                            hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-                            hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                            transferState = transferStates.TRANSFER;
+                        break;
+                    case UP:
+                        outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                        if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
+                            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
+                            transferTimer = System.currentTimeMillis() + 250;
+                            transferState = transferStates.DOWN;
                         }
-                    } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    break;
-                case TRANSFER:
-                    hardware.motors.intake.setPower(backPower);
-                    outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                        transferState = transferStates.UP_AGAIN;
-                        intakeState = intakeStates.IDLE;
-                    }
-                    break;
-                case UP_AGAIN:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (outtake.PIDReady()) {
-                        transferState = transferStates.BACK;
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                        transferTimer = 300 + System.currentTimeMillis();
-                    }
-                    break;
-                case BACK:
-                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                    if (transferTimer < System.currentTimeMillis()) {
-                        transferState = transferStates.DOWN_AGAIN;
-                    }
-                    break;
-                case DOWN_AGAIN:
-                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                    if (outtake.PIDReady()) {
-                        transferState = transferStates.DONE;
-                    }
-                    break;
-                case DONE:
-                    //FIXME: this only runs once
-                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                    transferState = transferStates.IDLE;
-                    break;
+                        break;
+                    case DOWN:
+                        if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
+                            outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
+
+                            if (hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20)
+                                hardware.motors.intake.setPower(backPower);
+                            else intake.slidePID(0);
+
+                            if (outtake.PIDReady() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20) {
+                                hardware.motors.intake.setPower(backPower);
+                                transferTimer = System.currentTimeMillis() + 400;
+                                outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
+                                hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
+                                hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+                                transferState = transferStates.TRANSFER;
+                            }
+                        } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                        break;
+                    case TRANSFER:
+                        hardware.motors.intake.setPower(backPower);
+                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
+                        if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
+                            transferState = transferStates.UP_AGAIN;
+                            intakeState = intakeStates.IDLE;
+                        }
+                        break;
+                    case UP_AGAIN:
+                        outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                        if (outtake.PIDReady()) {
+                            transferState = transferStates.BACK;
+                            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+                            transferTimer = 300 + System.currentTimeMillis();
+                        }
+                        break;
+                    case BACK:
+                        outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                        if (transferTimer < System.currentTimeMillis()) {
+                            transferState = transferStates.DOWN_AGAIN;
+                        }
+                        break;
+                    case DOWN_AGAIN:
+                        outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
+                        if (outtake.PIDReady()) {
+                            transferState = transferStates.DONE;
+                        }
+                        break;
+                    case DONE:
+                        //FIXME: this only runs once
+                        outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
+                        transferState = transferStates.IDLE;
+                        break;
+                }
             }
 
             if (transferState == transferStates.IDLE || transferState == transferStates.DONE) {
-                TeleOpOuttake(currentGamepad.right_trigger - currentGamepad.left_trigger, currentGamepad.right_bumper && !previousGamepad.right_bumper);
+                TeleOpOuttake(currentGamepad.right_trigger - currentGamepad.left_trigger, currentGamepad.a && !previousGamepad.a);
             }
 
             Vector input = new Vector(new Point(-gamepad1.left_stick_y, -gamepad1.left_stick_x, Point.CARTESIAN));
-            drivetrain.run(new Vector(0,0), new Vector (-gamepad1.right_stick_x,0), input,  0);
+            drivetrain.run(new Vector(0,0), new Vector (-gamepad1.right_stick_x*37.0/intake.getRobotLength(),0), input,  0);
 
+            telemetry.addData("leftPos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
+            telemetry.addData("rightPos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());
+            telemetry.addData("leftPower", hardware.motors.outtakeLeft.getLastPower());
+            telemetry.addData("rightPower", hardware.motors.outtakeRight.getLastPower());
             telemetry.addData("mode", specimenMode);
             telemetry.update();
         }
