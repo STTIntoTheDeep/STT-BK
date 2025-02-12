@@ -219,9 +219,9 @@ public class hardware {
     public enum servoPositions {
         intakeGrip(0.76),
         intakeRelease(0.44),
-        wristTransfer(0.39),
-        wristSampleCamera(0.119),
-        wristSpecimenCamera(0.71),
+        wristTransfer(0.36),
+        wristSampleCamera(0.605),
+        wristSpecimenCamera(0.1),
         keepSlides(0.5),
         releaseSlides(0),
 
@@ -231,12 +231,12 @@ public class hardware {
         shoulderForward(0.82),
         shoulderBack(0.34),
 
-        elbowLeft(new double[] {0.77,-0.06}),
-        elbowRight(new double[] {0.265,-0.04}),
-        elbowCentered(new double[]{0.51,-0.04}),
-        elbowTransfer(new double[]{0.51, 0.41}),
-        cameraDown(new double[]{0.51,0.18}),
-        cameraWide(new double[]{0.51,0.34});
+        elbowLeft(new double[] {0.76,-0.08}),
+        elbowRight(new double[] {0.26,-0.08}),
+        elbowCentered(new double[]{0.507,-0.08}),
+        elbowTransfer(new double[]{0.5, 0.41}),
+        cameraDown(new double[]{0.507,0.172}),
+        cameraWide(new double[]{0.507,0.34});
 
         servoPositions(double position) {this.position = position;}
         private double position;

@@ -7,8 +7,10 @@ import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.Drivetrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.kinematics.drivetrains.MecanumDrivetrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
+import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 
 @TeleOp(name = "SoloDrive",group = "TeleOp")
 public class SoloDrive extends rootOpMode {
@@ -25,13 +27,14 @@ public class SoloDrive extends rootOpMode {
     @Override
     public void runOpMode() {
         initialize(true);
+        intakeOpen = MathFunctions.roughlyEquals(hardware.servos.intake.getLastPosition(), hardware.servoPositions.intakeRelease.getPosition());
+        outtakeOpen = MathFunctions.roughlyEquals(hardware.servos.outtakeClaw.getLastPosition(), hardware.servoPositions.outtakeRelease.getPosition());
+
         drivetrain = new MecanumDrivetrain(hardwareMap);
+
         while (!isStarted()) {
             chooseSample();
         }
-
-        //TODO: you can probably remove this then
-        waitForStart();
 
         if (isStopRequested()) return;
 
@@ -41,39 +44,86 @@ public class SoloDrive extends rootOpMode {
 
             if (currentGamepad.options && !previousGamepad.options) {
                 specimenMode ^= true;
-                //TODO: if outtake doing anything, stop
-                changingMode = true;
             }
-            if (changingMode) changeMode(specimenMode);
 
-
-//            if (currentGamepad.x && !previousGamepad.x) {
-//                if (intakeState == intakeStates.IDLE) {
-//                    samplePipeline.desiredColor = allianceColor;
-//                    intakeState = intakeStates.EXTEND;
-//                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-//            }
-//
-//            if (currentGamepad.a && !previousGamepad.a && !specimenMode) {
-//                if (intakeState == intakeStates.IDLE) {
-//                    samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-//                    intakeState = intakeStates.EXTEND;
-//                } else if (intakeState == intakeStates.EXTEND) intakeState = intakeStates.FIND;
-//            }
+            if (currentGamepad.y && !previousGamepad.y) samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+            if (currentGamepad.x && !previousGamepad.x) samplePipeline.desiredColor = allianceColor;
 
             //TODO: add rumble
-            if (intakeState == intakeStates.DONE && !specimenMode) transferState = transferStates.UP;
+            simpleIntakeSequence(currentGamepad.a && !previousGamepad.a, false, -currentGamepad.left_stick_y);
 
-            if (!(transferState == transferStates.IDLE || transferState == transferStates.DONE)) {
+            switch (transferState) {
+                case IDLE:
+                    if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;
+                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+                    transferTimer = System.currentTimeMillis() + 250;
+                    break;
+                case UP:
+                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
+                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
+                        transferTimer = System.currentTimeMillis() + 250;
+                        transferState = transferStates.DOWN;
+                    }
+                    break;
+                case DOWN:
+                    if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
+                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
 
-            } else {
+                        intake.slidePID(0);
+
+                        if (outtake.PIDReady() && intake.PIDReady() && transferTimer < System.currentTimeMillis()) {
+                            hardware.motors.intake.setPower(backPower);
+                            transferTimer = System.currentTimeMillis() + 400;
+                            outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
+                            hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
+                            hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+                            transferState = transferStates.TRANSFER;
+                        }
+                    } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                    break;
+                case TRANSFER:
+                    hardware.motors.intake.setPower(backPower);
+                    outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
+                    if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
+                        transferState = transferStates.UP_AGAIN;
+                        intakeState = intakeStates.IDLE;
+                    }
+                    break;
+                case UP_AGAIN:
+                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                    if (outtake.PIDReady()) {
+                        transferState = transferStates.BACK;
+                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+                        transferTimer = 300 + System.currentTimeMillis();
+                    }
+                    break;
+                case BACK:
+                    outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
+                    if (transferTimer < System.currentTimeMillis()) {
+                        transferState = transferStates.DOWN_AGAIN;
+                    }
+                    break;
+                case DOWN_AGAIN:
+                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
+                    if (outtake.PIDReady()) {
+                        transferState = transferStates.DONE;
+                    }
+                    break;
+                case DONE:
+                    //FIXME: this only runs once
+                    outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
+                    transferState = transferStates.IDLE;
+                    break;
+            }
+
+            if (transferState == transferStates.IDLE) {
                 if (changingMode) {
-
+                    //TODO: change mode
                 } else {
                     TeleOpOuttake();
                 }
             }
-            simpleIntakeSequence(currentGamepad.a && !previousGamepad.a, false, -currentGamepad.left_stick_y);
             if (intakeState == intakeStates.IDLE || intakeState == intakeStates.DONE) {
                 if (currentGamepad.b && !previousGamepad.b) {
                     intakeOpen ^= true;
@@ -83,62 +133,40 @@ public class SoloDrive extends rootOpMode {
 
             Vector input = new Vector(new Point(-gamepad1.left_stick_y, -gamepad1.left_stick_x, Point.CARTESIAN));
             drivetrain.run(new Vector(0,0), new Vector (-gamepad1.right_stick_x,0), input,  0);
+
+            if (samplePipeline.desiredColor == SampleDetectionPipeline.YELLOW) telemetry.addLine("yellow");
+            else if (samplePipeline.desiredColor == SampleDetectionPipeline.BLUE) telemetry.addLine("blue");
+            else if (samplePipeline.desiredColor == SampleDetectionPipeline.RED) telemetry.addLine("red");
+
             telemetry.addData("mode", specimenMode);
-            telemetry.addData("slide pos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
+            telemetry.addData("intake ordinal", intakeState.ordinal());
+            telemetry.addData("transfer ordinal", transferState.ordinal());
+            telemetry.addData("left pos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
+            telemetry.addData("right pos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());
             telemetry.update();
         }
     }
 
     private void TeleOpOuttake() {
         // Not allowed to move the outtake while transferring or changing mode
-        // TODO: if buttons pressed, buttonMode true and state to UP (outtake)
-        if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
-            outtake.buttonMode = true;
-            high = true;
-        }
-        if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
-            outtake.buttonMode = true;
-            high = false;
-        }
-        if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
-            outtake.buttonMode = true;
-            goDown = true;
-        }
 
         // Controls the outtake
-        if (!outtake.buttonMode) {
-            outtake.leftPos = hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition();
-            outtake.rightPos = hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition();
-            outtake.slidesWithinLimits(currentGamepad.right_trigger - currentGamepad.left_trigger);
-            // Normally you'd want a rising edge detector here but the hardware wrapper already covers that.
-            // This code automatically moves the shoulder to the right position
-            if (specimenMode) {
-                if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-            } else {
-                if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-                else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-            }
-            // Outtake claw toggle
-            if (currentGamepad.right_bumper && !previousGamepad.right_bumper) hardware.servos.outtakeClaw.setServo(
-                    (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
-                            ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
-        } else {
-            if (goDown) {
-                outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                if (outtake.PIDReady()) goDown = false;
-            } else {
-//                if (specimenMode) outtake.scoreSpecimen(high);
-//                else outtake.scoreBasket(high);
-                //TODO: add rumble
-            }
-        }
+        outtake.leftPos = hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition();
+        outtake.rightPos = hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition();
+        // Normally you'd want a rising edge detector here but the hardware wrapper already covers that.
+        // This code automatically moves the shoulder to the right position
         if (specimenMode) {
-//            transferSpecimen();
+            outtake.slidesWithinLimits(currentGamepad.right_trigger - currentGamepad.left_trigger, 1100);
+            if (outtake.leftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition())
+                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+            else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
         } else {
-//            transferSample();
+            outtake.slidesWithinLimits(currentGamepad.right_trigger - currentGamepad.left_trigger);
+            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
         }
+        // Outtake claw toggle
+        if (currentGamepad.right_bumper && !previousGamepad.right_bumper) hardware.servos.outtakeClaw.setServo(
+            (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
+                ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
     }
 }

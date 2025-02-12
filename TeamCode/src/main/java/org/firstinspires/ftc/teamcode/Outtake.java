@@ -31,7 +31,7 @@ public class Outtake {
         CLEARS_INTAKE(400),
         CLEARS_ROBOT(750),
         LOWER_LIMIT(0),
-        UPPER_LIMIT(2300);
+        UPPER_LIMIT(2700);
 
         private final int position;
         public int getPosition(){return this.position;}
@@ -194,12 +194,18 @@ public class Outtake {
     public boolean PIDReady() {return left.getError() < 45 && right.getError() < 45;}
 
     /**
+     * TODO: documentation
      * @param power
      */
-    public void slidesWithinLimits(double power) {
+    public void slidesWithinLimits(double power) {slidesWithinLimits(power, slidePositions.UPPER_LIMIT.getPosition());}
+    /**
+     * TODO: documentation
+     * @param power
+     */
+    public void slidesWithinLimits(double power, int upperLimit) {
         getSlidePositions();
         if (power > 0) {
-            if (leftPos < slidePositions.UPPER_LIMIT.getPosition()) {
+            if (leftPos < upperLimit) {
                 leftPower = power;
                 rightPower = power;
             }

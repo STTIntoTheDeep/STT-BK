@@ -37,6 +37,9 @@ public class positionTune extends rootOpMode {
             previousGamepad.copy(currentGamepad);
             currentGamepad.copy(gamepad1);
 
+            SampleDetectionPipeline.cameraXPos = cameraX;
+            SampleDetectionPipeline.cameraYPos = cameraY;
+            SampleDetectionPipeline.cameraZPos = cameraZ;
             chooseSample();
             intake.setElbow(yaw, pitch);
             hardware.servos.wrist.setServo(wristAngle);

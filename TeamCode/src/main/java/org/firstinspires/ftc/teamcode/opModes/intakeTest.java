@@ -56,7 +56,7 @@ public class intakeTest extends rootOpMode {
 //                transferTimer = System.currentTimeMillis() + 250;
 //                transferState = transferStates.UP;
 //            }
-            //TODO: remove intake from !(DOWN || TRANSFER), intakeSequence covers that
+            //TODO: method when works
             switch (transferState) {
                 case IDLE:
                     if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;
@@ -75,10 +75,9 @@ public class intakeTest extends rootOpMode {
                     if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
                         outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
 
-                        if (hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20) hardware.motors.intake.setPower(backPower);
-                        else intake.slidePID(0);
+                        intake.slidePID(0);
 
-                        if (outtake.PIDReady() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 20) {
+                        if (outtake.PIDReady() && intake.PIDReady() && transferTimer < System.currentTimeMillis()) {
                             hardware.motors.intake.setPower(backPower);
                             transferTimer = System.currentTimeMillis() + 400;
                             outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
