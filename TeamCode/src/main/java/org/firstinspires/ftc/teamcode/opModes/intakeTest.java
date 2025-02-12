@@ -56,7 +56,6 @@ public class intakeTest extends rootOpMode {
 //                transferTimer = System.currentTimeMillis() + 250;
 //                transferState = transferStates.UP;
 //            }
-            //TODO: remove intake from !(DOWN || TRANSFER), intakeSequence covers that
             switch (transferState) {
                 case IDLE:
                     if (intakeState == intakeStates.GRAB) transferState = transferStates.UP;

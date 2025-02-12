@@ -20,7 +20,7 @@ import java.util.List;
 
 @TeleOp(name = "OpenCV Testing")
 @Config
-public class opencv extends LinearOpMode {
+public class SpecimenDetectionPipeline extends LinearOpMode {
 
     double cX = 0;
     double cY = 0;
