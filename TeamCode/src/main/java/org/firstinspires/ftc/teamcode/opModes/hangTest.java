@@ -40,9 +40,9 @@ public class hangTest extends rootOpMode {
 
             hardware.motors.hook.setPower(currentGamepad.left_trigger - currentGamepad.right_trigger);
 
-            outtake.slidesWithinLimits(-currentGamepad.left_stick_y);
+            outtake.slidesWithinLimits(-currentGamepad.right_stick_y);
 
-            drivetrain.run(new Vector(new Point(-currentGamepad.left_stick_y, currentGamepad.left_stick_x, Point.CARTESIAN)), currentGamepad.right_stick_x);
+            drivetrain.run(new Vector(new Point(-currentGamepad.left_stick_y, -currentGamepad.left_stick_x, Point.CARTESIAN)), currentGamepad.right_stick_x);
 
             telemetry.addData("left pos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
             telemetry.addData("right pos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());

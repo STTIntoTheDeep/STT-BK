@@ -17,7 +17,7 @@ public class positionTune extends rootOpMode {
     boolean intakeOpen = true, outtakeOpen = true;
     public static int intakeTarget = 0, outtakeTarget = 0;
     public static double pitch = 0.18, yaw = 0.51, wristAngle = 0.14,
-            cameraX = SampleDetectionPipeline.cameraXPos, cameraY = SampleDetectionPipeline.cameraYPos, cameraZ = SampleDetectionPipeline.cameraZPos;
+            cameraX = hardware.cameraXPos, cameraY = hardware.cameraYPos, cameraZ = hardware.cameraZPos;
     //pitch -0.135 is down, 0.35 is transfer, 0.14 is camera 0, 0.245 is camera 45 degree
     // yaw 0.56 is parallel, 0.31 is right, 0.82 is left
 
@@ -37,9 +37,9 @@ public class positionTune extends rootOpMode {
             previousGamepad.copy(currentGamepad);
             currentGamepad.copy(gamepad1);
 
-            SampleDetectionPipeline.cameraXPos = cameraX;
-            SampleDetectionPipeline.cameraYPos = cameraY;
-            SampleDetectionPipeline.cameraZPos = cameraZ;
+            hardware.cameraXPos = cameraX;
+            hardware.cameraYPos = cameraY;
+            hardware.cameraZPos = cameraZ;
             chooseSample();
             intake.setElbow(yaw, pitch);
             hardware.servos.wrist.setServo(wristAngle);

@@ -18,6 +18,7 @@ public class Outtake {
         GRAB,
         UP,
         FIDDLE,
+        SHOULDER,
         SCORE,
         SCORED,
         DOWN
@@ -31,7 +32,7 @@ public class Outtake {
         CLEARS_INTAKE(400),
         CLEARS_ROBOT(750),
         LOWER_LIMIT(0),
-        UPPER_LIMIT(2700);
+        UPPER_LIMIT(2500);
 
         private final int position;
         public int getPosition(){return this.position;}
@@ -133,25 +134,25 @@ public class Outtake {
                 break;
             case GRAB:
                 if (timer + 250 < System.currentTimeMillis()) {
-                    targetHeight = slidePositions.HIGH_RUNG.getPosition();
+                    targetHeight = 1400;
                     specimenStates = sequenceStates.UP;
                 }
                 break;
             case UP:
                 slidePID(targetHeight);
-                if (PIDReady() && next) specimenStates = sequenceStates.SCORE;
+                if (PIDReady() && next) specimenStates = sequenceStates.SHOULDER;
                 break;
-            case SCORE:
+            case SHOULDER:
                 hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
                 slidePID(targetHeight);
                 timer = System.currentTimeMillis();
-                specimenStates = sequenceStates.SCORED;
-                targetHeight -= 200;
+                specimenStates = sequenceStates.SCORE;
+                targetHeight = 700;
                 break;
-            case SCORED:
+            case SCORE:
                 if (timer + 200 < System.currentTimeMillis()) {
                     slidePID(targetHeight);
-                    if (next) {
+                    if (PIDReady()) {
                         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
                         specimenStates = sequenceStates.DOWN;
                         targetHeight = 0;
@@ -166,6 +167,7 @@ public class Outtake {
                     buttonMode = false;
                 }
                 if (next) specimenStates = sequenceStates.UP;
+                break;
         }
     }
 

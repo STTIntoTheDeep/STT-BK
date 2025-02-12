@@ -8,7 +8,12 @@ import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvPipeline;
 
 /**
  * This is the hardware class. You can use this as an interface for all your hardware reads and writes, so you can more easily manage and minimise them.
@@ -227,16 +232,16 @@ public class hardware {
 
         outtakeGrip(0.54),
         outtakeRelease(0.0),
-        shoulderTransfer(0.02),
-        shoulderForward(0.82),
-        shoulderBack(0.34),
+        shoulderTransfer(0.06),
+        shoulderForward(0.91),
+        shoulderBack(0.41),
 
-        elbowLeft(new double[] {0.76,-0.08}),
-        elbowRight(new double[] {0.26,-0.08}),
-        elbowCentered(new double[]{0.507,-0.08}),
-        elbowTransfer(new double[]{0.5, 0.41}),
-        cameraDown(new double[]{0.507,0.172}),
-        cameraWide(new double[]{0.507,0.34});
+        elbowLeft(new double[] {0.76,-0.09}),
+        elbowRight(new double[] {0.26,-0.063}),
+        elbowCentered(new double[]{0.51,-0.07}),
+        elbowTransfer(new double[]{0.51, 0.41}),
+        cameraDown(new double[]{0.51,0.18}),
+        cameraWide(new double[]{0.51,0.34});
 
         servoPositions(double position) {this.position = position;}
         private double position;
@@ -246,4 +251,36 @@ public class hardware {
         private double[] differential;
         public double[] getDifferential(){return this.differential;}
     }
+
+    public static OpenCvCamera camera;
+
+    public static void initCamera(HardwareMap map, OpenCvPipeline startPipeline) {
+        int cameraMonitorViewId = map.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", map.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(map.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.startStreaming(CAMERA_WIDTH,CAMERA_HEIGHT, OpenCvCameraRotation.UPSIDE_DOWN);
+                camera.setPipeline(startPipeline);
+            }
+
+            @Override
+            public void onError(int errorCode) {}
+        });
+    }
+
+    private static final int CAMERA_WIDTH = 640; // width  of wanted camera resolution
+    private static final int CAMERA_HEIGHT = 360; // height of wanted camera resolution
+
+    public static final double
+            xPixels = 640,
+            yPixels = 360,
+            yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
+            xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
+    public static double
+            cameraXPos = 9.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraYPos = -0.6, //Offset in secondary axis versus the differential shaft of the intake
+            cameraZPos = 22, //Height of the camera, relative to the floor
+            cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
 }

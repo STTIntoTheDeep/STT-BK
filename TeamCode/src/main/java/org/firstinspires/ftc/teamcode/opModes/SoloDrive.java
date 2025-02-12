@@ -36,6 +36,8 @@ public class SoloDrive extends rootOpMode {
             chooseSample();
         }
 
+        waitForStart();
+
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {

@@ -18,16 +18,33 @@ public class KalmanFilter {
     private double previousState;
     private double previousVariance;
 
+    /**
+     * TODO: documentation
+     * @param parameters
+     */
     public KalmanFilter(KalmanFilterParameters parameters) {
         this.parameters = parameters;
         reset();
     }
 
+    /**
+     * TODO: documentation
+     * @param parameters
+     * @param startState
+     * @param startVariance
+     * @param startGain
+     */
     public KalmanFilter(KalmanFilterParameters parameters, double startState, double startVariance, double startGain) {
         this.parameters = parameters;
         reset(startState, startVariance, startGain);
     }
 
+    /**
+     * TODO: documentation
+     * @param startState
+     * @param startVariance
+     * @param startGain
+     */
     public void reset(double startState, double startVariance, double startGain) {
         state = startState;
         previousState = startState;
@@ -36,12 +53,21 @@ public class KalmanFilter {
         kalmanGain = startGain;
     }
 
+    /**
+     * TODO: documentation
+     */
     public void reset() {
         reset(0, 1, 1);
     }
 
-    public void update(double updateData, double updateProjection) {
-        state = previousState + updateData;
+    /**
+     * TODO: documentation
+     * @param updateProjection
+     * @param updateData
+     */
+    public void update(double updateProjection, double ... updateData) {
+        //TODO: n-input Kalman filter
+        state = previousState + updateData[0];
         variance = previousVariance + parameters.modelCovariance;
         kalmanGain = variance / (variance + parameters.dataCovariance);
         state += kalmanGain * (updateProjection - state);
@@ -50,10 +76,18 @@ public class KalmanFilter {
         previousVariance = variance;
     }
 
+    /**
+     * TODO: documentation
+     * @return
+     */
     public double getState() {
         return state;
     }
 
+    /**
+     * TODO: documentation
+     * @param telemetry
+     */
     public void debug(Telemetry telemetry) {
         telemetry.addData("state", state);
         telemetry.addData("variance", variance);
