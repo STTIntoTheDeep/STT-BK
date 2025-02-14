@@ -17,21 +17,21 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.List;
 
-@TeleOp(name = "ManualDrive",group = "TeleOp")
-public class ManualDrive extends rootOpMode {
+@TeleOp(name = "Duodrive",group = "TeleOp")
+public class DuoDrive extends rootOpMode {
     Drivetrain drivetrain;
-    boolean specimenMode = true, clawHorizontal;
-
+    boolean specimenMode = true, clawHorizontal = false, elbowDown = false;
     int rumbleStates, ledStates;
 
     // By setting these values to new Gamepad(), they will default to all
     // boolean values as false and all float values as 0
-    Gamepad currentGamepad = new Gamepad();
-    Gamepad previousGamepad = new Gamepad();
+    Gamepad currentGamepad = new Gamepad(),
+            previousGamepad = new Gamepad(),
+    currentGamepad2 = new Gamepad(),
+    previousGamepad2 = new Gamepad();
 
     @Override
     public void runOpMode() {
-        TeleOp = true;
         intake = new Intake(hardwareMap, TeleOp);
         outtake = new Outtake(hardwareMap, TeleOp);
         drivetrain = new MecanumDrivetrain(hardwareMap);
@@ -52,6 +52,12 @@ public class ManualDrive extends rootOpMode {
          */
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.setMsTransmissionInterval(25);
+
+        hardware.reduceHardwareCalls = false;
+        intake.setElbow(0.51, 0.34);
+        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
+        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+        hardware.reduceHardwareCalls = true;
 
         while (!isStarted()) {
             chooseSample();
@@ -75,7 +81,21 @@ public class ManualDrive extends rootOpMode {
                 hardware.servos.wrist.setServo((clawHorizontal) ? hardware.servoPositions.wristTransfer : hardware.servoPositions.wristSampleCamera);
             }
 
-            manualIntakeSequence(currentGamepad.y && !previousGamepad.y, -currentGamepad.right_stick_y);
+            if (currentGamepad2.left_bumper && !previousGamepad2.left_bumper) {
+                elbowDown ^= true;
+            }
+            if (elbowDown) {
+                intake.elbowYDistance(intake.armLength * currentGamepad2.left_stick_x);
+            } else {
+                intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+            }
+            hardware.servos.wrist.setServo(new Vector(new Point(currentGamepad2.right_stick_x, -currentGamepad2.right_stick_y)).getTheta());
+
+            if (currentGamepad.a && !previousGamepad.a) {
+                intakeOpen ^= true;
+                hardware.servos.intake.setServo((intakeOpen) ? hardware.servoPositions.intakeRelease : hardware.servoPositions.intakeGrip);
+            }
+            intake.slideWithinLimits(currentGamepad2.left_trigger - currentGamepad2.right_trigger);
 
             if (!specimenMode) {
                 switch (transferState) {

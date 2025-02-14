@@ -233,14 +233,14 @@ public class hardware {
         outtakeGrip(0.54),
         outtakeRelease(0.0),
         shoulderTransfer(0.06),
-        shoulderForward(0.91),
+        shoulderForward(0.84),
         shoulderBack(0.41),
 
         elbowLeft(new double[] {0.76,-0.09}),
         elbowRight(new double[] {0.26,-0.063}),
         elbowCentered(new double[]{0.51,-0.07}),
         elbowTransfer(new double[]{0.51, 0.41}),
-        cameraDown(new double[]{0.51,0.18}),
+        cameraDown(new double[]{0.51,0.19}),
         cameraWide(new double[]{0.51,0.34});
 
         servoPositions(double position) {this.position = position;}
@@ -279,8 +279,8 @@ public class hardware {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public static double
-            cameraXPos = 9.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraXPos = 6.8, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
             cameraYPos = -0.6, //Offset in secondary axis versus the differential shaft of the intake
-            cameraZPos = 22, //Height of the camera, relative to the floor
+            cameraZPos = 26.6, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
 }

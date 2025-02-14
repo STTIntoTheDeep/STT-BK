@@ -92,7 +92,7 @@ public class ThreeWheelIMULocalizer extends Localizer {
         imu = hardwareMap.get(IMU.class, "imu");
 
         // TODO: replace this with your IMU's orientation
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP)));
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD)));
 
         // TODO: replace these with your encoder positions
         leftEncoderPose = new Pose(-7.4/2.54, 11.05/2.54, 0);
@@ -233,6 +233,8 @@ public class ThreeWheelIMULocalizer extends Localizer {
         strafeEncoder.update();
 
         double currentIMUOrientation = MathFunctions.normalizeAngle(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+        //TODO: Kalman filter IMU, previous heading and odometry
+        //TODO: decide how often to run IMU;
         deltaRadians = MathFunctions.getTurnDirection(previousIMUOrientation, currentIMUOrientation) * MathFunctions.getSmallestAngleDifference(currentIMUOrientation, previousIMUOrientation);
         previousIMUOrientation = currentIMUOrientation;
     }

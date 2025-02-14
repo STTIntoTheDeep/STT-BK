@@ -135,6 +135,21 @@ public class BezierCurve {
     }
 
     /**
+     * TODO: documentation
+     * FIXME
+     * @return
+     */
+    public BezierCurve generateReversedBezierCurve() {
+        ArrayList<Point> reverseControlPoints = new ArrayList<>();
+        int j = 0;
+        for (int i = controlPoints.size() - 1; i == 0; i--) {
+            reverseControlPoints.add(controlPoints.get(j));
+            j++;
+        }
+        return new BezierCurve(reverseControlPoints);
+    }
+
+    /**
      * This returns the unit tangent Vector at the end of the BezierCurve.
      *
      * @return returns the end tangent Vector.

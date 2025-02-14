@@ -13,23 +13,14 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
  */
 @Config
 public class Outtake {
-    public enum sequenceStates {
-        IDLING,
-        GRAB,
-        UP,
-        FIDDLE,
-        SHOULDER,
-        SCORE,
-        SCORED,
-        DOWN
-    }
+    public enum sequenceStates {IDLING, GRAB, UP, FIDDLE, SHOULDER, SCORE, SCORED, DOWN}
     public enum slidePositions {
         DOWN(0),
         TRANSFER(220),
         HIGH_RUNG(1050),
         LOW_BASKET(1450),
         HIGH_BASKET(2300),
-        CLEARS_INTAKE(400),
+        CLEARS_INTAKE(500),
         CLEARS_ROBOT(750),
         LOWER_LIMIT(0),
         UPPER_LIMIT(2500);
@@ -95,26 +86,94 @@ public class Outtake {
      * TODO: documentation
      * One has already transferred
      * @param high
-     * @param score
+     * @param next
      */
-    public void scoreBasket(boolean high, boolean score) {
+    public void scoreBasket(boolean high, boolean next) {
         switch (sampleStates) {
             case IDLING:
+                if (next) {
+                    sampleStates = sequenceStates.GRAB;
+                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
+                    timer = System.currentTimeMillis();
+                }
+                break;
+            case GRAB:
+                if (timer + 250 < System.currentTimeMillis()) {
+                    if (high) targetHeight = slidePositions.HIGH_BASKET.getPosition();
+                    else targetHeight = slidePositions.LOW_BASKET.getPosition();
+                    sampleStates = sequenceStates.UP;
+                }
                 break;
             case UP:
-                if (high) targetHeight = slidePositions.HIGH_BASKET.getPosition();
-                else targetHeight = slidePositions.LOW_BASKET.getPosition();
                 slidePID(targetHeight);
-                if (PIDReady() && score) sampleStates = sequenceStates.SCORE;
+                if (PIDReady() && next) sampleStates = sequenceStates.SCORE;
                 break;
             case SCORE:
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                timer = System.currentTimeMillis();
-                sampleStates = sequenceStates.SCORED;
+                slidePID(targetHeight);
+                if (timer + 800 < System.currentTimeMillis()) {
+                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+                    sampleStates = sequenceStates.DOWN;
+                    targetHeight = 0;
+                    timer = System.currentTimeMillis();
+                }
                 break;
-            case SCORED:
-                if (timer + 200 < System.currentTimeMillis()) sampleStates = sequenceStates.IDLING;
-                buttonMode = false;
+            case DOWN:
+                slidePID(targetHeight);
+                if (timer + 300 < System.currentTimeMillis()) {
+                    if (PIDReady()) {
+                        sampleStates = sequenceStates.IDLING;
+                        buttonMode = false;
+                    }
+                    if (next) sampleStates = sequenceStates.UP;
+                }
+                break;
+        }
+    }
+
+    public void smashDown(boolean next) {
+        switch (specimenStates) {
+            case IDLING:
+                if (next) {
+                    specimenStates = sequenceStates.GRAB;
+                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
+                    timer = System.currentTimeMillis();
+                }
+                break;
+            case GRAB:
+                if (timer + 250 < System.currentTimeMillis()) {
+                    targetHeight = 800;
+                    specimenStates = sequenceStates.UP;
+                }
+                break;
+            case UP:
+                slidePID(targetHeight);
+                if (PIDReady() && next) specimenStates = sequenceStates.SHOULDER;
+                break;
+            case SHOULDER:
+                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
+                slidePID(targetHeight);
+                timer = System.currentTimeMillis();
+                specimenStates = sequenceStates.SCORE;
+                break;
+            case SCORE:
+                slidePID(targetHeight);
+                if (timer + 800 < System.currentTimeMillis()) {
+                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
+                    specimenStates = sequenceStates.DOWN;
+                    targetHeight = 0;
+                    timer = System.currentTimeMillis();
+                }
+                break;
+            case DOWN:
+                slidePID(targetHeight);
+                if (timer + 300 < System.currentTimeMillis()) {
+                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+                    if (PIDReady()) {
+                        specimenStates = sequenceStates.IDLING;
+                        buttonMode = false;
+                    }
+                    if (next) specimenStates = sequenceStates.UP;
+                }
                 break;
         }
     }
@@ -134,7 +193,7 @@ public class Outtake {
                 break;
             case GRAB:
                 if (timer + 250 < System.currentTimeMillis()) {
-                    targetHeight = 1400;
+                    targetHeight = 1300;
                     specimenStates = sequenceStates.UP;
                 }
                 break;
@@ -147,26 +206,30 @@ public class Outtake {
                 slidePID(targetHeight);
                 timer = System.currentTimeMillis();
                 specimenStates = sequenceStates.SCORE;
-                targetHeight = 700;
                 break;
             case SCORE:
-                if (timer + 200 < System.currentTimeMillis()) {
-                    slidePID(targetHeight);
-                    if (PIDReady()) {
+                if (timer + 800 < System.currentTimeMillis()) {
+                    slidePID(700);
+                    if (hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition() < 700) {
                         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
                         specimenStates = sequenceStates.DOWN;
                         targetHeight = 0;
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+                        timer = System.currentTimeMillis();
                     }
+                } else {
+                    slidePID(targetHeight);
                 }
                 break;
             case DOWN:
                 slidePID(targetHeight);
-                if (PIDReady()) {
-                    specimenStates = sequenceStates.IDLING;
-                    buttonMode = false;
+                if (timer + 300 < System.currentTimeMillis()) {
+                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
+                    if (PIDReady()) {
+                        specimenStates = sequenceStates.IDLING;
+                        buttonMode = false;
+                    }
+                    if (next) specimenStates = sequenceStates.UP;
                 }
-                if (next) specimenStates = sequenceStates.UP;
                 break;
         }
     }

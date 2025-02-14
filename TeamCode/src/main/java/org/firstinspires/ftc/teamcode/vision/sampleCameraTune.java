@@ -13,6 +13,8 @@ public class sampleCameraTune extends rootOpMode {
     Gamepad currentGamepad = new Gamepad();
     Gamepad previousGamepad = new Gamepad();
 
+    boolean intakeOpen = false;
+
     @Override
     public void runOpMode() throws InterruptedException {
         initialize(false);
@@ -35,17 +37,25 @@ public class sampleCameraTune extends rootOpMode {
             previousGamepad.copy(currentGamepad);
             currentGamepad.copy(gamepad1);
 
-            if (currentGamepad.dpad_left) {
-                sampleCamera();
-                hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
-            }
-            else if (currentGamepad.dpad_right) wideCamera();
+//            if (currentGamepad.dpad_left) {
+//                sampleCamera();
+//                hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
+//            }
+//            else if (currentGamepad.dpad_right) wideCamera();
 
             simpleIntakeSequence(currentGamepad.y && !previousGamepad.y, false, -currentGamepad.right_stick_y);
+            if (intakeState == intakeStates.IDLE || intakeState == intakeStates.DONE) {
+                if (currentGamepad.b && !previousGamepad.b)
+                    intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
+                if (currentGamepad.x && !previousGamepad.x) {
+                    intakeOpen ^= true;
+                    hardware.servos.intake.setServo((intakeOpen) ? hardware.servoPositions.intakeRelease : hardware.servoPositions.intakeGrip);
+                }
+            }
 
-            if (currentGamepad.y && !previousGamepad.y) samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
-            if (currentGamepad.x && !previousGamepad.x) samplePipeline.desiredColor = SampleDetectionPipeline.RED;
-            if (currentGamepad.b && !previousGamepad.b) samplePipeline.desiredColor = SampleDetectionPipeline.BLUE;
+            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
+            if (currentGamepad.dpad_left && !previousGamepad.dpad_left) samplePipeline.desiredColor = SampleDetectionPipeline.RED;
+            if (currentGamepad.dpad_right && !previousGamepad.dpad_right) samplePipeline.desiredColor = SampleDetectionPipeline.BLUE;
 
             telemetry.addData("state",intakeState.ordinal());
             telemetry.addData("saveRAM", samplePipeline.saveRAM);
@@ -54,6 +64,7 @@ public class sampleCameraTune extends rootOpMode {
             else if (samplePipeline.desiredColor == SampleDetectionPipeline.RED) telemetry.addLine("red");
             telemetry.addData("slideTarget", slideTarget);
             telemetry.addData("pidReady", intake.PIDReady());
+            telemetry.addData("intakePower", hardware.motors.intake.getLastPower());
             telemetry.update();
         }
     }

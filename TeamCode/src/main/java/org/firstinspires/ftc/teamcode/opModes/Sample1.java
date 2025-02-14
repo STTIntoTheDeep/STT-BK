@@ -2,12 +2,12 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
-
 @Autonomous(name = "Sample1",group = "Autonomous")
 public class Sample1 extends rootOpMode {
-    boolean specimenMode = true, high, goDown = false;
+    boolean specimenMode = true, high, goDown = false, outtakeNextState;
     int state = 0;
+
+    double driveTimer;
 
     @Override
     public void runOpMode() {
@@ -20,23 +20,25 @@ public class Sample1 extends rootOpMode {
         }
 
         if (isStopRequested()) return;
+
+        outtake.scoreSpecimen(true);
+        driveTimer = System.currentTimeMillis() + 2750;
         while (opModeIsActive()) {
             follower.update();
             switch (state) {
-                case 0:
-                    if (!follower.isBusy()) {
-                        follower.followPath(path2, true);
-                        follower.setMaxPower(1.0);
+                case 0:// Drive to sub second time
+                    if (!follower.isBusy() || driveTimer < System.currentTimeMillis()) {
+                        outtakeNextState = true;
                         state++;
                     }
                     break;
-                case 1:
-                    if (!follower.isBusy()) {
-//                        follower.followPath(path3, true);
-//                        state++;
-                    }
-                    break;
             }
+
+            if (outtakeNextState) {
+                outtake.scoreBasket(true, true);
+                outtakeNextState = false;
+            } else {outtake.scoreBasket(true, false);}
+
             follower.telemetryDebug(telemetry);
 
             telemetry.addData("mode", specimenMode);

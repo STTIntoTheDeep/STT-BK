@@ -120,12 +120,12 @@ public class FollowerConstants {
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
     // Tested at 13.8V
-    public static double forwardZeroPowerAcceleration = -410.0858991816445;
+    public static double forwardZeroPowerAcceleration = -33;
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
     //Tested at 13.4V
-    public static double lateralZeroPowerAcceleration = -857.6562290653185;
+    public static double lateralZeroPowerAcceleration = -78;
 
     // A multiplier for the zero power acceleration to change the speed the robot decelerates at
     // the end of paths.
@@ -134,7 +134,7 @@ public class FollowerConstants {
     // Decreasing this will cause the deceleration at the end of the Path to be slower, making the
     // robot slower but reducing risk of end-of-path overshoots or localization slippage.
     // This can be set individually for each Path, but this is the default.
-    public static double zeroPowerAccelerationMultiplier = 0.05;
+    public static double zeroPowerAccelerationMultiplier = 4;
 
 
     // When the robot is at the end of its current Path or PathChain and the velocity goes below

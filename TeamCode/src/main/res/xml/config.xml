@@ -48,6 +48,8 @@
             <Servo name="claw" port="4"/>
             <Servo name="shoulder" port="5"/>
 
+            <ControlHubImuBHI260AP name="imu" port="0" bus="0"/>
+
             <!--This line signifies that the Control Hub configuration has ended.-->
         </LynxModule>
         <!--This line signifies that the Control Hub Portal configuration has ended.-->

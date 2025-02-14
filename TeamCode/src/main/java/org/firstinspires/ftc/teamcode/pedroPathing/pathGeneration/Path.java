@@ -316,6 +316,13 @@ public class Path {
     }
 
     /**
+     * TODO: documentation
+     * FIXME
+     * @return
+     */
+    public ArrayList<Point> getReversedControlPoints() {return new ArrayList<>(curve.generateReversedBezierCurve().getControlPoints());}
+
+    /**
      * Returns the first control point for this BezierCurve.
      *
      * @return This returns the Point.

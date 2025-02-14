@@ -62,9 +62,9 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * Threshold values
      */
     public static int
-            AREA_LOWER_LIMIT = 30000,
+            AREA_LOWER_LIMIT = 20000,
             AREA_UPPER_LIMIT = 100000,
-            YELLOW_MASK_THRESHOLD = 110,
+            YELLOW_MASK_THRESHOLD = 100,
             BLUE_MASK_THRESHOLD = 150,
             RED_MASK_THRESHOLD = 170;
 
@@ -139,7 +139,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
          * @return
          */
         double scaleX(double y) {
-            return 2.25;
+            return 1.75;
 //            return Math.cos(Math.toRadians(9*Math.sqrt(3025.0/377.0))) * y + 1; //TODO regression
         }
     }

@@ -103,10 +103,10 @@ public class outtakeTest extends rootOpMode {
 //                shoulderBack ^= true;
 //                hardware.servos.shoulder.setServo((shoulderBack) ? hardware.servoPositions.shoulderBack : hardware.servoPositions.shoulderTransfer);
 //            }
-            hardware.servos.shoulder.setServo(shoulder);
-            telemetry.addData("shoulderPos", hardware.servos.shoulder.getLastPosition());
-            outtake.slidePID(target);
-//            outtake.scoreSpecimen(currentGamepad.a && !previousGamepad.a && !currentGamepad.options);
+//            hardware.servos.shoulder.setServo(shoulder);
+//            telemetry.addData("shoulderPos", hardware.servos.shoulder.getLastPosition());
+//            outtake.slidePID(target);
+            outtake.scoreSpecimen(currentGamepad.a && !previousGamepad.a && !currentGamepad.options);
             //TODO: sequence + triggers
 //            if (!outtake.buttonMode && currentGamepad.a && !previousGamepad.a && !currentGamepad.options) outtake.buttonMode = true;
 //            if (outtake.buttonMode) {
