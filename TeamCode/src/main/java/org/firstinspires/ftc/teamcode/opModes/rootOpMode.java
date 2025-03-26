@@ -34,12 +34,9 @@ public abstract class rootOpMode extends LinearOpMode {
     protected enum intakeStates {IDLE, FIND, ROTATE, DOWN, MOVE, GRAB, BACK, CHECK, PRE_DONE, DONE, WRONG}
     protected intakeStates intakeState = intakeStates.IDLE;
 
-    protected enum transferStates{IDLE, UP, DOWN, TRANSFER, UP_AGAIN, BACK, DOWN_AGAIN, PRE_DONE, DONE}
-    protected transferStates transferState = transferStates.IDLE;
+    protected double continueTime, slideTarget, backPower = -0.25, lastLeftPos, lastRightPos;
 
-    protected double transferTimer, continueTime, shoulderTimer, slideTarget, backPower = -0.25, lastLeftPos, lastRightPos;
-
-    protected boolean TeleOp, changingMode = false, specimenMode = true, intakeOpen = true, outtakeOpen, shoulderBack = false;
+    protected boolean TeleOp, intakeOpen = true, outtakeOpen;
 
     protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
@@ -263,39 +260,13 @@ public abstract class rootOpMode extends LinearOpMode {
         // This code automatically moves the shoulder to the right position
         lastLeftPos = outtake.leftPos;
         lastRightPos = outtake.rightPos;
-        if (specimenMode) {
-            outtake.slidesWithinLimits(power, 1400);
-            if (lastLeftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition() && outtake.leftPos >= Outtake.slidePositions.CLEARS_ROBOT.getPosition()) {
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-            }
-//            if (outtake.leftPos < 650) {
-//                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-//            } else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-        } else {
-            outtake.slidesWithinLimits(power);
-            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        }
+        outtake.slidesWithinLimits(power, 1400);
         // Outtake claw toggle
         if (toggle) {
-            shoulderBack = true;
-            shoulderTimer = System.currentTimeMillis() + 400;
             hardware.servos.outtakeClaw.setServo(
                     (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
                             ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
         }
-
-        if (shoulderBack && shoulderTimer < System.currentTimeMillis()) {
-            shoulderBack = false;
-            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        }
-    }
-
-        /**
-         * TODO: documentation
-         * @param toSpecimenMode
-         */
-    protected void changeMode(boolean toSpecimenMode) {
-        //TODO: rumble
     }
 
     /**
@@ -335,7 +306,7 @@ public abstract class rootOpMode extends LinearOpMode {
 
     public void manualIntakeSequence(boolean next, double power) {
         if (next) {
-            if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
+            if (intakeState == intakeStates.IDLE) {
                 samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
                 intakeState = intakeStates.FIND;
                 intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential()[0], 0.34);
@@ -354,12 +325,11 @@ public abstract class rootOpMode extends LinearOpMode {
 
         switch (intakeState) {
             case IDLE:
-                if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
+                if (!intake.PIDReady()) intake.slidePID(0);
                 break;
             case FIND:
-                intake.slideWithinLimits(Math.max(power, -0.5));
-                break;
             case DOWN:
+            case DONE:
                 intake.slideWithinLimits(Math.max(power, -0.5));
                 break;
             case GRAB:
@@ -373,8 +343,7 @@ public abstract class rootOpMode extends LinearOpMode {
             case BACK:
                 if (continueTime < System.currentTimeMillis()) {
                     intakeState = intakeStates.PRE_DONE;
-                    if (specimenMode) continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
-                    else continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+                    continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
                 }
                 break;
             case PRE_DONE:
@@ -382,9 +351,6 @@ public abstract class rootOpMode extends LinearOpMode {
                 if (continueTime < System.currentTimeMillis() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 40) {
                     intakeState = intakeStates.DONE;
                 }
-                break;
-            case DONE:
-                intake.slideWithinLimits(Math.max(power, -0.5));
                 break;
         }
     }
@@ -396,7 +362,7 @@ public abstract class rootOpMode extends LinearOpMode {
      */
     public void simpleIntakeSequence(boolean next, boolean reset, double powerOrPos) {
         if (next) {
-            if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
+            if (intakeState == intakeStates.IDLE) {
                 samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
                 intakeState = intakeStates.FIND;
                 samplePipeline.saveRAM = false;
@@ -415,7 +381,7 @@ public abstract class rootOpMode extends LinearOpMode {
 
         switch (intakeState) {
             case IDLE:
-                if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
+                if (!intake.PIDReady()) intake.slidePID(0);
                 break;
             case FIND:
                 if (TeleOp) {
@@ -464,75 +430,6 @@ public abstract class rootOpMode extends LinearOpMode {
         }
     }
 
-    protected void transfer() {
-        switch (transferState) {
-            case IDLE:
-                if (intakeState == intakeStates.GRAB) {
-                    transferState = transferStates.UP;
-                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
-                    transferTimer = System.currentTimeMillis() + 250;
-                }
-                break;
-            case UP:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-                    transferTimer = System.currentTimeMillis() + 250;
-                    transferState = transferStates.DOWN;
-                }
-                break;
-            case DOWN:
-                if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
-                    outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-
-                    hardware.motors.intake.setPower(Math.min(intake.calculatePID(0), backPower));
-
-                    if (outtake.PIDReady() && intake.PIDReady() && transferTimer < System.currentTimeMillis()) {
-                        hardware.motors.intake.setPower(backPower);
-                        transferTimer = System.currentTimeMillis() + 400;
-                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-                        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                        transferState = transferStates.TRANSFER;
-                    }
-                } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                break;
-            case TRANSFER:
-                hardware.motors.intake.setPower(backPower);
-                outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                    transferState = transferStates.UP_AGAIN;
-                    intakeState = intakeStates.IDLE;
-                }
-                break;
-            case UP_AGAIN:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (outtake.PIDReady()) {
-                    transferState = transferStates.BACK;
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                    transferTimer = 300 + System.currentTimeMillis();
-                }
-                break;
-            case BACK:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (transferTimer < System.currentTimeMillis()) {
-                    transferState = transferStates.DOWN_AGAIN;
-                }
-                break;
-            case DOWN_AGAIN:
-                outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                if (outtake.PIDReady()) {
-                    transferState = transferStates.DONE;
-                }
-                break;
-            case DONE:
-                //FIXME: this only runs once
-                outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                transferState = transferStates.IDLE;
-                break;
-        }
-    }
-
     protected void chooseAlliance() {
         if (gamepad1.x) {
             allianceColor = SampleDetectionPipeline.BLUE;
@@ -552,9 +449,10 @@ public abstract class rootOpMode extends LinearOpMode {
     protected void sampleCamera() {
         intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
         hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
-        hardware.cameraZPos = 26.7;
-        hardware.cameraAlpha = -1.0;
+        hardware.cameraZPos = 28.9;
+        hardware.cameraAlpha = 0.0;
         hardware.cameraXPos = 6.8;
+        hardware.cameraYPos = -0.6;
         samplePipeline.AREA_LOWER_LIMIT = 30000;
         //TODO: change maximum area
     }

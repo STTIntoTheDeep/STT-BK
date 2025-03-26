@@ -46,14 +46,11 @@ public class Outtake {
         init(hardwareMap, TeleOp);
     }
 
-    public sequenceStates sampleStates = sequenceStates.IDLING;
     public sequenceStates specimenStates = sequenceStates.IDLING;
 
-    double timer, slideDelta, leftPower, rightPower;
+    double timer, power;
 
     public double leftPos, rightPos;
-
-    final double k = 0.01;
 
     private int targetHeight;
 
@@ -66,57 +63,21 @@ public class Outtake {
             0);
     public static double ff = 0.12;
 
-    private final PIDFController left = new PIDFController(outtakePIDFCoefficients);
+    private final PIDFController pid = new PIDFController(outtakePIDFCoefficients);
     private final PIDFController right = new PIDFController(outtakePIDFCoefficients);
 
     public void init(HardwareMap map, boolean TeleOp) {
-        hardware.motors.outtakeLeft.initMotor(map);
-        hardware.motors.outtakeLeft.dcMotorEx.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-
-        hardware.motors.outtakeRight.initMotor(map);
-        hardware.motors.outtakeRight.dcMotorEx.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        hardware.motors.outtake.initMotor(map);
+        hardware.motors.outtake.dcMotorEx.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         hardware.servos.outtakeClaw.initServo(map);
-        hardware.servos.shoulder.initServo(map);
 
         if (TeleOp) return;
 
         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
 
-        hardware.motors.outtakeLeft.dcMotorEx.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        hardware.motors.outtakeLeft.dcMotorEx.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-
-        hardware.motors.outtakeRight.dcMotorEx.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        hardware.motors.outtakeRight.dcMotorEx.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    /**
-     * TODO: documentation
-     * One has already transferred
-     * @param high
-     * @param score
-     */
-    public void scoreBasket(boolean high, boolean score) {
-        switch (sampleStates) {
-            case IDLING:
-                break;
-            case UP:
-                if (high) targetHeight = slidePositions.HIGH_BASKET.getPosition();
-                else targetHeight = slidePositions.LOW_BASKET.getPosition();
-                slidePID(targetHeight);
-                if (PIDReady() && score) sampleStates = sequenceStates.SCORE;
-                break;
-            case SCORE:
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                timer = System.currentTimeMillis();
-                sampleStates = sequenceStates.SCORED;
-                break;
-            case SCORED:
-                if (timer + 200 < System.currentTimeMillis()) sampleStates = sequenceStates.IDLING;
-                buttonMode = false;
-                break;
-        }
+        hardware.motors.outtake.dcMotorEx.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        hardware.motors.outtake.dcMotorEx.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     /**
@@ -143,7 +104,6 @@ public class Outtake {
                 if (PIDReady() && next) specimenStates = sequenceStates.SHOULDER;
                 break;
             case SHOULDER:
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
                 slidePID(targetHeight);
                 timer = System.currentTimeMillis();
                 specimenStates = sequenceStates.SCORE;
@@ -156,7 +116,6 @@ public class Outtake {
                         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
                         specimenStates = sequenceStates.DOWN;
                         targetHeight = 0;
-                        hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
                     }
                 }
                 break;
@@ -176,24 +135,18 @@ public class Outtake {
      * @param target
      */
     public void slidePID(double target) {
-        left.setCoefficients(outtakePIDFCoefficients);
-        right.setCoefficients(outtakePIDFCoefficients);
-        getSlidePositions();
-        left.updateError(target - leftPos);
-        leftPower = left.runPIDF();
+        pid.setCoefficients(outtakePIDFCoefficients);
+        leftPos = hardware.motors.outtake.dcMotorEx.getCurrentPosition();
+        pid.updateError(target - leftPos);
+        power = pid.runPIDF();
         if (leftPos > slidePositions.TRANSFER.getPosition()) {
-            leftPower = Math.max(leftPower + ff, -0.7);
-        } else leftPower = target < slidePositions.TRANSFER.getPosition() ? 0 : Math.max(leftPower + ff, -0.7);
+            power = Math.max(power + ff, -0.7);
+        } else power = target < slidePositions.TRANSFER.getPosition() ? 0 : Math.max(power + ff, -0.7);
 
-        right.updateError(target - rightPos);
-        rightPower = right.runPIDF();
-        if (rightPos > slidePositions.TRANSFER.getPosition()) {
-            rightPower = Math.max(rightPower + ff, -0.7);
-        } else rightPower = target < slidePositions.TRANSFER.getPosition() ? 0 : Math.max(rightPower + ff, -0.7);
-        setSlides(false);
+        hardware.motors.outtake.setPower(this.power);
     }
 
-    public boolean PIDReady() {return left.getError() < 45 && right.getError() < 45;}
+    public boolean PIDReady() {return pid.getError() < 45 && right.getError() < 45;}
 
     /**
      * TODO: documentation
@@ -205,42 +158,14 @@ public class Outtake {
      * @param power
      */
     public void slidesWithinLimits(double power, int upperLimit) {
-        getSlidePositions();
+        leftPos = hardware.motors.outtake.dcMotorEx.getCurrentPosition();
         if (power > 0) {
-            if (leftPos < upperLimit) {
-                leftPower = power;
-                rightPower = power;
-            }
-            else {
-                leftPower = 0;
-                rightPower = 0;
-            }
+            if (leftPos < upperLimit) this.power = power;
+            else this.power = 0;
         } else {
-            if (leftPos > slidePositions.LOWER_LIMIT.getPosition()) {
-                leftPower = power;
-                rightPower = power;
-            }
-            else {
-                leftPower = 0;
-                rightPower = 0;
-            }
+            if (leftPos > slidePositions.LOWER_LIMIT.getPosition()) this.power = power;
+            else this.power = 0;
         }
-        setSlides(true);
-    }
-
-    public void getSlidePositions() {
-        leftPos = hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition();
-        rightPos = hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition();
-    }
-
-    private void setSlides(boolean compensate) {
-        if (compensate) {
-            slideDelta = leftPos - rightPos;
-            hardware.motors.outtakeLeft.setPower(leftPower - k * slideDelta);
-            hardware.motors.outtakeRight.setPower(rightPower + k * slideDelta);
-        } else {
-            hardware.motors.outtakeLeft.setPower(leftPower);
-            hardware.motors.outtakeRight.setPower(rightPower);
-        }
+        hardware.motors.outtake.setPower(this.power);
     }
 }

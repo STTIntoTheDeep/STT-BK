@@ -18,7 +18,7 @@
             <goBILDA5201SeriesMotor name="left_front" port="0"/>
             <goBILDA5201SeriesMotor name="hook" port="1"/>
             <goBILDA5201SeriesMotor name="left_back" port="2"/>
-            <goBILDA5201SeriesMotor name="outtakeLeft" port="3"/>
+<!--            <goBILDA5201SeriesMotor name="" port="3"/>-->
 
             <!--These are the Expansion Hub's servos. Change the ports and names of your servos.-->
 <!--            <Servo name="" port="0"/>-->
@@ -29,7 +29,6 @@
             <!--            <Servo name="" port="5"/>-->
 
             <!--This is a REV 2m Distance Sensor. Since this is an I^2C device, we require the type of device in the configuration as well.-->
-                <sensor name="otosSensor" type="OpticalDistanceSensor" port="1"/>
 
             <!--This line signifies that the Expansion Hub configuration has ended.-->
         </LynxModule>
@@ -40,7 +39,7 @@
             <!--These are the Control Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5201SeriesMotor name="right_back" port="0"/>
             <goBILDA5201SeriesMotor name="intake" port="1"/>
-            <goBILDA5201SeriesMotor name="outtakeRight" port="2"/>
+            <goBILDA5201SeriesMotor name="outtake" port="2"/>
             <goBILDA5201SeriesMotor name="right_front" port="3"/>
 
             <!--These are the Control Hub's servos. Change the ports and names of your servos.-->
@@ -49,7 +48,14 @@
             <Servo name="elbowLeft" port="2"/>
             <Servo name="elbowRight" port="3"/>
             <Servo name="claw" port="4"/>
-            <Servo name="shoulder" port="5"/>
+<!--            <Servo name="" port="5"/>-->
+
+<!--            <ControlHubImuBHI260AP name="imu" port="0" bus="0"/>-->
+
+            <SparkFunOTOS name="OTOS" port="0" bus="2"/>
+
+            <RevTouchSensor name="leftFrontSensor" port="0"/>
+            <RevTouchSensor name="rightFrontSensor" port="1"/>
 
             <!--This line signifies that the Control Hub configuration has ended.-->
         </LynxModule>

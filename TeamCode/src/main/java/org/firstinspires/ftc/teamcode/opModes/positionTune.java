@@ -4,9 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.Outtake;
 import org.firstinspires.ftc.teamcode.hardware;
-import org.firstinspires.ftc.teamcode.vision.SampleDetectionPipeline;
 
 @Config
 @TeleOp(name = "positionTune",group = "Tests")
@@ -25,7 +23,6 @@ public class positionTune extends rootOpMode {
     public void runOpMode() {
         initialize(false);
         TeleOp = true;
-        specimenMode = false;
         hardware.reduceHardwareCalls = false;
         hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
         intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
@@ -75,8 +72,7 @@ public class positionTune extends rootOpMode {
             }
             intake.slidePID(intakeTarget);
             outtake.slidePID(outtakeTarget);
-            telemetry.addData("left pos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
-            telemetry.addData("right pos", hardware.motors.outtakeRight.dcMotorEx.getCurrentPosition());
+            telemetry.addData("right pos", hardware.motors.outtake.dcMotorEx.getCurrentPosition());
             telemetry.addData("outtake ready", outtake.PIDReady());
             telemetry.addData("intake ready", intake.PIDReady());
             telemetry.addData("intake motor pos", hardware.motors.intake.dcMotorEx.getCurrentPosition());

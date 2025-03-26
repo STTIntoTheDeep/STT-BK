@@ -187,9 +187,9 @@ public class Intake {
      * @param power
      */
     public void slideWithinLimits(double power) {
-        if (power < 0) {
+        if (power > 0) {
             if (baseLength + getSlideLength() + armLength < maxLength) hardware.motors.intake.setPower(power);
             else hardware.motors.intake.setPower(0);
-        } else hardware.motors.intake.setPower(0);
+        } else hardware.motors.intake.setPower(power);
     }
 }

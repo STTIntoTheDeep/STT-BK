@@ -14,13 +14,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
  * This is the OTOSLocalizer class. This class extends the Localizer superclass and is a
  * localizer that uses the SparkFun OTOS. The diagram below, which is modified from
  * Road Runner, shows a typical set up.
- *
+
  * The view is from the top of the robot looking downwards.
- *
+
  * left on robot is the y positive direction
- *
  * forward on robot is the x positive direction
- *
+
  *                         forward (x positive)
  *                                △
  *                                |
@@ -38,9 +37,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
  * @version 1.0, 7/20/2024
  */
 public class OTOSLocalizer extends Localizer {
-    private HardwareMap hardwareMap;
     private Pose startPose;
-    private SparkFunOTOS otos;
+    private final SparkFunOTOS otos;
     private SparkFunOTOS.Pose2D otosPose;
     private SparkFunOTOS.Pose2D otosVel;
     private SparkFunOTOS.Pose2D otosAcc;
@@ -65,28 +63,26 @@ public class OTOSLocalizer extends Localizer {
      * @param setStartPose the Pose to start from
      */
     public OTOSLocalizer(HardwareMap map, Pose setStartPose) {
-        hardwareMap = map;
 
         /*
          TODO: If you want to use the "SparkFunOTOSCorrected" version of OTOS, then replace the
           'SparkFunOTOS.class' below with 'SparkFunOTOSCorrected.class' and set the OTOS as a
           "SparkFunOTOS Corrected" in your robot config
          */
-        // TODO: replace this with your OTOS port
-        otos = hardwareMap.get(SparkFunOTOS.class, "otosSensor");
+
+        otos = map.get(SparkFunOTOS.class, "OTOS");
 
         otos.setLinearUnit(DistanceUnit.INCH);
         otos.setAngularUnit(AngleUnit.RADIANS);
 
-        // TODO: replace this with your OTOS offset from the center of the robot
         // For the OTOS, left/right is the y axis and forward/backward is the x axis, with left being
         // positive y and forward being positive x. PI/2 radians is facing forward, and clockwise
         // rotation is negative rotation.
         otos.setOffset(new SparkFunOTOS.Pose2D(4.92,0,Math.PI / 2));
 
         // TODO: replace these with your tuned multipliers
-        otos.setLinearScalar(1.0);
-        otos.setAngularScalar(1.0);
+        otos.setLinearScalar(0.9656);
+        otos.setAngularScalar(0.995);
 
         otos.calibrateImu();
         otos.resetTracking();
@@ -166,6 +162,7 @@ public class OTOSLocalizer extends Localizer {
     @Override
     public void update() {
         otos.getPosVelAcc(otosPose,otosVel,otosAcc);
+        //TODO: wait why not just otosPose.h
         totalHeading += MathFunctions.getSmallestAngleDifference(otosPose.h, previousHeading);
         previousHeading = otosPose.h;
     }
@@ -222,6 +219,5 @@ public class OTOSLocalizer extends Localizer {
     /**
      * This does nothing since this localizer does not use the IMU.
      */
-    public void resetIMU() {
-    }
+    public void resetIMU() {}
 }

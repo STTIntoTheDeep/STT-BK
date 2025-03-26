@@ -3,6 +3,8 @@ repositories {
     google() // Needed for androidx
 
     maven { url = 'https://maven.brott.dev/' }
+    maven { url = "https://maven.rowanmcalpin.com/" }
+    maven { url = "https://maven.brott.dev/" } // Remove if you don't intend to use the FTC Dashboard (required if using PedroPathing)
 }
 
 dependencies {
@@ -16,6 +18,10 @@ dependencies {
     implementation 'org.firstinspires.ftc:Vision:10.1.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
 
-    implementation 'com.acmerobotics.dashboard:dashboard:0.4.5'
+
+    implementation 'com.rowanmcalpin.nextftc:core:0.6.1'
+    implementation 'com.rowanmcalpin.nextftc:ftc:0.6.1'
+    implementation 'com.rowanmcalpin.nextftc:pedro:0.6.1' // Remove if you don't intend to use PedroPathing
+    implementation 'com.acmerobotics.dashboard:dashboard:0.4.16' // Remove if you don't intend to use the FTC Dashboard (required if using PedroPathing)
 }
 
