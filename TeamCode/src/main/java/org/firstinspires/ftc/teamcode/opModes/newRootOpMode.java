@@ -9,6 +9,7 @@ import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
 import com.rowanmcalpin.nextftc.core.command.utility.InstantCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.LambdaCommand;
+import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.WaitUntil;
 import com.rowanmcalpin.nextftc.ftc.NextFTCOpMode;
 import com.rowanmcalpin.nextftc.ftc.gamepad.Button;
@@ -139,12 +140,10 @@ public class newRootOpMode extends NextFTCOpMode {
     protected static Command scoreSpecimen() {
         return new SequentialGroup(new WaitUntil(hardware::touchingSubmersible),
                 Arm.INSTANCE.toHigh()
-//                ,OuttakeClaw.INSTANCE.open().asDeadline(Arm.INSTANCE.holdPosition())
-//                ,Arm.INSTANCE.toPosition(600).and(Arm.INSTANCE.holdPosition())
-//                Arm.INSTANCE.holdPosition().and(
-//                        new WaitUntil(() -> !hardware.touchingSubmersible())
-//                                .then(new Delay(1.0))),
-//                Arm.INSTANCE.toDown()
+                ,new Delay(0.3)
+                ,OuttakeClaw.INSTANCE.clear().asDeadline(Arm.INSTANCE.holdPosition())
+                ,Arm.INSTANCE.toDown()
+                ,OuttakeClaw.INSTANCE.open()
         );
     }
 

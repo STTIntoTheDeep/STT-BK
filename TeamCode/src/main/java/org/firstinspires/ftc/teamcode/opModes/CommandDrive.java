@@ -33,8 +33,8 @@ public class CommandDrive extends newRootOpMode {
         driverControlled = new MecanumDriverControlled(motors, gamepadManager.getGamepad1());
         driverControlled.invoke();
 
-//        gamepadManager.getGamepad1().getA().setPressedCommand(newRootOpMode::grabSpecimen);
-//        gamepadManager.getGamepad1().getB().setHeldCommand(newRootOpMode::scoreSpecimen);
+        gamepadManager.getGamepad1().getA().setPressedCommand(newRootOpMode::grabSpecimen);
+        gamepadManager.getGamepad1().getB().setHeldCommand(newRootOpMode::scoreSpecimen);
 //        touchingSubmersible().setPressedCommand(newRootOpMode::scoreSpecimen);
     }
 }

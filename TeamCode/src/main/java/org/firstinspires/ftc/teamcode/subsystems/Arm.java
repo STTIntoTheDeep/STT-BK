@@ -5,6 +5,8 @@ import com.rowanmcalpin.nextftc.core.command.Command;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.WaitUntil;
 import com.rowanmcalpin.nextftc.core.control.controllers.PIDFController;
+import com.rowanmcalpin.nextftc.core.control.controllers.feedforward.ArmFeedforward;
+import com.rowanmcalpin.nextftc.core.control.controllers.feedforward.Feedforward;
 import com.rowanmcalpin.nextftc.core.control.controllers.feedforward.StaticFeedforward;
 import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.hardware.controllables.HoldPosition;
@@ -20,8 +22,8 @@ public class Arm extends Subsystem {
     // USER CODE
     public MotorEx motor;
 
-    public PIDFController controller = new PIDFController(0.005, 0.0, 0.0, new StaticFeedforward(0.0), 20);
-
+    public PIDFController controller = new PIDFController(0.004, 0.0, 0.0, new StaticFeedforward(0), 20);
+//new ArmFeedforward(0.3, ticksToAngle -> 750/Math.PI)
     public Command toDown() {
         return new ParallelGroup(
                 new WaitUntil(() -> true),
@@ -30,7 +32,7 @@ public class Arm extends Subsystem {
     }
 
     public Command toHigh() {
-        return toPosition(300);
+        return toPosition(420);
     }
 
     public Command toPosition(double position) {

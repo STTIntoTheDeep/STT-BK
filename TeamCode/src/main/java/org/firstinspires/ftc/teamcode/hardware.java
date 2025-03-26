@@ -262,16 +262,17 @@ public class hardware {
      *
      */
     public enum servoPositions {
-        intakeGrip(0.9),
-        intakeRelease(0.44),
-        wristTransfer(0.36),
-        wristSampleCamera(0.605),
-        wristSpecimenCamera(0.1),
-        keepSlides(0.5),
-        releaseSlides(0),
+        intakeGrip(.9),
+        intakeRelease(.44),
+        wristTransfer(.36),
+        wristSampleCamera(.605),
+        wristSpecimenCamera(.1),
+        keepSlides(.5),
+        releaseSlides(.0),
 
-        outtakeGrip(0.58),
-        outtakeRelease(1.0),
+        outtakeGrip(.31),
+        outtakeRelease(.65),
+        outtakeClear(.9),
 
         elbowLeft(new double[] {0.76,-0.09}),
         elbowRight(new double[] {0.26,-0.063}),
