@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.opModes;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 import org.firstinspires.ftc.teamcode.subsystems.FollowPath;
 
 @Config

@@ -15,6 +15,7 @@ import com.rowanmcalpin.nextftc.ftc.gamepad.Button;
 
 import org.firstinspires.ftc.teamcode.hardware;
 import org.firstinspires.ftc.teamcode.pedroPathing.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
@@ -46,7 +47,7 @@ public class newRootOpMode extends NextFTCOpMode {
     protected final Pose startPose = new Pose(0.0, 0.0, Math.toRadians(0.0)),
             finishPose = new Pose(20.0, 0.0, Math.toRadians(90.0));
 
-    protected PathChain move, back;
+    protected PathChain move, back, path1, path2, path3, path4, path5, path6, path7;
 
     protected Follower follower;
     protected SampleDetectionPipeline samplePipeline;
@@ -61,6 +62,70 @@ public class newRootOpMode extends NextFTCOpMode {
         back = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(finishPose), new Point(startPose)))
                 .setLinearHeadingInterpolation(finishPose.getHeading(), startPose.getHeading())
+                .build();
+        path1 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Point(8.593, 55.725, Point.CARTESIAN),
+                        new Point(24.738, 67.703, Point.CARTESIAN),
+                        new Point(39.580, 67.443, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path2 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Point(39.580, 67.443, Point.CARTESIAN),
+                        new Point(14.843, 63.537, Point.CARTESIAN),
+                        new Point(4.687, 18.228, Point.CARTESIAN),
+                        new Point(91.660, 42.184, Point.CARTESIAN),
+                        new Point(58.590, 26.561, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path3 = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Point(58.590, 26.561, Point.CARTESIAN),
+                        new Point(15.103, 26.561, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(new BezierCurve(
+                        new Point(15.103, 26.561, Point.CARTESIAN),
+                        new Point(74.474, 26.821, Point.CARTESIAN),
+                        new Point(58.590, 16.145, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path4 = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Point(58.590, 16.145, Point.CARTESIAN),
+                        new Point(15.103, 16.145, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(new BezierCurve(
+                        new Point(15.103, 16.145, Point.CARTESIAN),
+                        new Point(74.213, 16.665, Point.CARTESIAN),
+                        new Point(58.850, 8.333, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path5 = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Point(58.850, 8.333, Point.CARTESIAN),
+                        new Point(15.103, 7.812, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(new BezierCurve(
+                        new Point(15.103, 7.812, Point.CARTESIAN),
+                        new Point(34.633, 31.248, Point.CARTESIAN),
+                        new Point(9.374, 51.559, Point.CARTESIAN),
+                        new Point(8.593, 25.259, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path6 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Point(8.593, 25.259, Point.CARTESIAN),
+                        new Point(14.061, 65.881, Point.CARTESIAN),
+                        new Point(39.320, 69.266, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        path7 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Point(39.320, 69.266, Point.CARTESIAN),
+                        new Point(5.989, 60.933, Point.CARTESIAN),
+                        new Point(8.854, 23.696, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
     }
 
@@ -127,7 +192,7 @@ public class newRootOpMode extends NextFTCOpMode {
                 Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowTransfer.getDifferential()),
                 //Retract slides
                 Slides.INSTANCE.toPosition(0)
-         );
+        );
     }
 
     public Button touchingSubmersible() {return new Button(hardware::touchingSubmersible);}
