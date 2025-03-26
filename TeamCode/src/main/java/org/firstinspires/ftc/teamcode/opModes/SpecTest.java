@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.rowanmcalpin.nextftc.core.command.groups.ParallelDeadlineGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelRaceGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
@@ -25,9 +26,11 @@ public class SpecTest extends newRootOpMode {
 //                new ParallelGroup(
 //                        new ParallelRaceGroup(new FollowPath(path1, follower),
 //                                new WaitUntil(hardware::touchingSubmersible)
-//                        ,scoreSpecimen()
+//                        ),scoreSpecimen()
 //                ),
-                new FollowPath(path1, follower),
+                new ParallelDeadlineGroup(
+                        new WaitUntil(hardware::touchingSubmersible),
+                        new FollowPath(path1, true, 1.0, follower)),
                 new FollowPath(path2, follower),
                 new FollowPath(path3, follower),
                 new FollowPath(path4, follower),

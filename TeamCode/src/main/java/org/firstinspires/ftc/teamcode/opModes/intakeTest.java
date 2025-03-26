@@ -13,9 +13,11 @@ public class intakeTest extends rootOpMode {
     Gamepad previousGamepad = new Gamepad();
 
     public static int target = 0;
-    public static double cm = 0, pitch = 0.18, yaw = 0.51, angle, backPower = -0.25;
+    public static double cm = 0, pitch = 0.18, yaw = 0.51, angle, claw, backPower = -0.25;
     //pitch -0.135 is down, 0.35 is transfer, 0.14 is camera 0, 0.245 is camera 45 degree
     // yaw 0.56 is parallel, 0.31 is right, 0.82 is left
+
+    boolean open = false;
 
     @Override
     public void runOpMode() {
@@ -47,7 +49,7 @@ public class intakeTest extends rootOpMode {
             }
             else if (currentGamepad.dpad_right) wideCamera();
 
-            simpleIntakeSequence(currentGamepad.y && !previousGamepad.y, currentGamepad.a, currentGamepad.right_trigger  -currentGamepad.left_trigger);
+//            simpleIntakeSequence(currentGamepad.y && !previousGamepad.y, currentGamepad.a, currentGamepad.right_trigger  -currentGamepad.left_trigger);
 
 //            intake.slideCM(cm);
 
@@ -55,9 +57,9 @@ public class intakeTest extends rootOpMode {
 //            intake.elbowYDistance(cm);
 
 //            intake.wristToAngle(Math.toRadians(angle) + 0.5*Math.PI - Math.acos(cm/intake.armLength));
-//            intake.wristToAngle(angle);
+            intake.wristToAngle(angle);
 
-//            hardware.servos.intake.setServo(currentGamepad.right_trigger);
+            hardware.servos.intake.setServo(claw);
 //            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
 //                open ^= true;
 //                hardware.servos.intake.setServo((open) ? hardware.servoPositions.intakeRelease : hardware.servoPositions.intakeGrip);

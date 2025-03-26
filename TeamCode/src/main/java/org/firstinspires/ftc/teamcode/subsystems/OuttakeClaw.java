@@ -19,29 +19,32 @@ public class OuttakeClaw extends Subsystem {
     public Servo servo;
 
     public Command open() {
+        double timer = Math.abs(hardware.servos.outtakeClaw.getLastPosition() - hardware.servoPositions.outtakeRelease.getPosition());
         return new SequentialGroup(
                 new ServoToPosition(hardware.servos.outtakeClaw.servo, // SERVO TO MOVE
                         hardware.servoPositions.outtakeRelease.getPosition(), // POSITION TO MOVE TO
                         this),
-                new Delay(0.25)// IMPLEMENTED SUBSYSTEM
+                new Delay(timer)// IMPLEMENTED SUBSYSTEM
         );
     }
 
     public Command clear() {
+        double timer = 2.0 * Math.abs(hardware.servos.outtakeClaw.getLastPosition() - hardware.servoPositions.outtakeClear.getPosition()) + 8.0;
         return new SequentialGroup(
                 new ServoToPosition(hardware.servos.outtakeClaw.servo, // SERVO TO MOVE
                         hardware.servoPositions.outtakeClear.getPosition(), // POSITION TO MOVE TO
                         this),
-                new Delay(1.5)// IMPLEMENTED SUBSYSTEM
+                new Delay(timer)// IMPLEMENTED SUBSYSTEM
         );
     }
 
     public Command close() {
+        double timer = Math.abs(hardware.servos.outtakeClaw.getLastPosition() - hardware.servoPositions.outtakeGrip.getPosition());
         return new SequentialGroup(
                 new ServoToPosition(hardware.servos.outtakeClaw.servo, // SERVO TO MOVE
                         hardware.servoPositions.outtakeGrip.getPosition(), // POSITION TO MOVE TO
                         this), // IMPLEMENTED SUBSYSTEM
-                new Delay(0.25)
+                new Delay(timer)
         );
     }
 

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
+import android.graphics.Path;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -9,9 +11,11 @@ import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
 import com.rowanmcalpin.nextftc.core.command.utility.InstantCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.LambdaCommand;
+import com.rowanmcalpin.nextftc.core.command.utility.PerpetualCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.WaitUntil;
 import com.rowanmcalpin.nextftc.ftc.NextFTCOpMode;
+import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.gamepad.Button;
 
 import org.firstinspires.ftc.teamcode.hardware;
@@ -34,8 +38,7 @@ import java.util.List;
 
 public class newRootOpMode extends NextFTCOpMode {
     public newRootOpMode() {
-        super(
-                Arm.INSTANCE,
+        super(Arm.INSTANCE,
                 Elbow.INSTANCE,
                 IntakeClaw.INSTANCE,
                 OuttakeClaw.INSTANCE,
@@ -45,28 +48,29 @@ public class newRootOpMode extends NextFTCOpMode {
     }
     protected Command driverControlled;
 
-    protected final Pose startPose = new Pose(0.0, 0.0, Math.toRadians(0.0)),
-            finishPose = new Pose(20.0, 0.0, Math.toRadians(90.0));
+    protected final Point startPoint = new Point(8.593, 55.725, Point.CARTESIAN);
+//    protected final Pose startPose = new Pose(0.0, 0.0, Math.toRadians(0.0)),
+//            finishPose = new Pose(20.0, 0.0, Math.toRadians(90.0));
 
     protected PathChain move, back, path1, path2, path3, path4, path5, path6, path7;
 
     protected Follower follower;
-    protected SampleDetectionPipeline samplePipeline;
 
     protected boolean TeleOp;
+    protected static boolean redAlliance = false;
 
     protected void buildPaths() {
-        move = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(startPose), new Point(finishPose)))
-                .setLinearHeadingInterpolation(startPose.getHeading(), finishPose.getHeading())
-                .build();
-        back = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(finishPose), new Point(startPose)))
-                .setLinearHeadingInterpolation(finishPose.getHeading(), startPose.getHeading())
-                .build();
+//        move = follower.pathBuilder()
+//                .addPath(new BezierLine(new Point(startPose), new Point(finishPose)))
+//                .setLinearHeadingInterpolation(startPose.getHeading(), finishPose.getHeading())
+//                .build();
+//        back = follower.pathBuilder()
+//                .addPath(new BezierLine(new Point(finishPose), new Point(startPose)))
+//                .setLinearHeadingInterpolation(finishPose.getHeading(), startPose.getHeading())
+//                .build();
         path1 = follower.pathBuilder()
                 .addPath(new BezierCurve(
-                        new Point(8.593, 55.725, Point.CARTESIAN),
+                        startPoint,
                         new Point(24.738, 67.703, Point.CARTESIAN),
                         new Point(39.580, 67.443, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -130,6 +134,15 @@ public class newRootOpMode extends NextFTCOpMode {
                 .build();
     }
 
+    protected static Command alliance(boolean red, boolean blue) {
+        if (blue) redAlliance = false;
+        else if (red) redAlliance = true;
+        return new InstantCommand(() -> {
+            OpModeData.telemetry.addData("redAlliance", redAlliance);
+            OpModeData.telemetry.update();
+        });
+    }
+
     protected static Command grabSpecimen() {
         return new SequentialGroup(
                 Arm.INSTANCE.toDown(),
@@ -140,19 +153,22 @@ public class newRootOpMode extends NextFTCOpMode {
     protected static Command scoreSpecimen() {
         return new SequentialGroup(new WaitUntil(hardware::touchingSubmersible),
                 Arm.INSTANCE.toHigh()
-                ,new Delay(0.3)
-                ,OuttakeClaw.INSTANCE.clear().asDeadline(Arm.INSTANCE.holdPosition())
-                ,Arm.INSTANCE.toDown()
-                ,OuttakeClaw.INSTANCE.open()
+                ,new ParallelDeadlineGroup(new SequentialGroup(OuttakeClaw.INSTANCE.clear(), new Delay(8.0)), Arm.INSTANCE.holdPosition())
         );
     }
 
-    protected Command cameraDown() {
+    protected static Command resetArm() {
+        return new ParallelGroup(Arm.INSTANCE.toDown(),OuttakeClaw.INSTANCE.open());
+    }
+
+    protected static Command fullArm() {return new SequentialGroup(scoreSpecimen(),new Delay(0.5),resetArm());}
+
+    protected static Command cameraDown() {
         hardware.cameraZPos = 28.9;
         hardware.cameraAlpha = 0.0;
         hardware.cameraXPos = 6.8;
         hardware.cameraYPos = -0.6;
-        samplePipeline.AREA_LOWER_LIMIT = 30000;
+        Camera.samplePipeline.AREA_LOWER_LIMIT = 30000;
         return new ParallelGroup(
                 Elbow.INSTANCE.cameraDown(),
                 Wrist.INSTANCE.cameraToFront()
@@ -165,7 +181,7 @@ public class newRootOpMode extends NextFTCOpMode {
                 //Move until you've found a good one
                 new ParallelDeadlineGroup(
                         new LambdaCommand()
-                                .setStart(() -> samplePipeline.saveRAM = false)
+                                .setStart(() -> Camera.samplePipeline.saveRAM = false)
                                 .setUpdate(Camera::chooseSample),
                         cameraDown(),
                         (TeleOp) ? Slides.INSTANCE.setPowerWithinLimits(gamepad1.left_trigger - gamepad1.right_trigger) : Slides.INSTANCE.toPosition(500)
@@ -174,7 +190,7 @@ public class newRootOpMode extends NextFTCOpMode {
                 new ParallelGroup(
                         IntakeClaw.INSTANCE.open(),
                         new InstantCommand(() -> {
-                            samplePipeline.saveRAM = true;
+                            Camera.samplePipeline.saveRAM = true;
                             slideTarget[0] = hardware.getSlideLength() + Camera.bestSampleInformation[1] - hardware.armLength*Math.sin(Math.acos(-Camera.bestSampleInformation[0]/hardware.armLength));
                         }),
                         Wrist.INSTANCE.toAngle(Math.toRadians(Camera.bestSampleInformation[2]) + 0.5*Math.PI - Math.acos(Camera.bestSampleInformation[0]/hardware.armLength)),
@@ -217,7 +233,7 @@ public class newRootOpMode extends NextFTCOpMode {
         }
 //        cameraDown().invoke();
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(startPose);
+        follower.setStartingPose(new Pose(startPoint.getX(), startPoint.getY()));
         buildPaths();
     }
 }
