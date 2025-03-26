@@ -25,7 +25,6 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation 'com.android.identity:identity-credential:20231002'
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.7'
