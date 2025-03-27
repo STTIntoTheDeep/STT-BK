@@ -160,7 +160,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     Stage[] stages = Stage.values();
     int stageNum = 0;
     public Sample bestSample;
-    public volatile Scalar desiredColor = YELLOW, processingColor = YELLOW;
+    public volatile Scalar desiredColor = BLUE, processingColor = BLUE;
 
     @Override
     public void onViewportTapped() {

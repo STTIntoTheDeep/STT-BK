@@ -30,9 +30,9 @@ public class SlimSampleDetectionPipeline extends OpenCvPipeline {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public double
-            cameraXPos = 11.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
-            cameraYPos = 0.0, //Offset in secondary axis versus the differential shaft of the intake
-            cameraZPos = 26.0, //Height of the camera, relative to the floor
+            cameraXPos = 7.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraYPos = -0.7, //Offset in secondary axis versus the differential shaft of the intake
+            cameraZPos = 28.9, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
 
     public static boolean wantToProcess = false;

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -34,14 +35,13 @@ public class hardware {
      */
     public enum motors {
         leftBack("left_back", DcMotorSimple.Direction.REVERSE),//For swerve forward
-        leftFront("left_front", DcMotorSimple.Direction.REVERSE),
-        rightBack("right_back"),
-        rightFront("right_front"),//For swerve forward
+        leftFront("left_front"),
+        rightBack("right_back", DcMotorSimple.Direction.REVERSE),
+        rightFront("right_front", DcMotorSimple.Direction.REVERSE),
 
         hook("hook", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
         intake("intake", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
-        outtakeLeft("outtakeLeft", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER),
-        outtakeRight("outtakeRight", DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        outtake("outtake", DcMotorSimple.Direction.REVERSE, DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         /**
          * This creates a new motor, with a config name, a direction and a RunMode.
@@ -152,7 +152,6 @@ public class hardware {
         intake("intakeClaw", 600, 2400),
         outtakeClaw("claw", 600, 2400),
         wrist("wrist"),
-        shoulder("shoulder"),
         elbowRight("elbowRight");
 
         /**
@@ -169,7 +168,7 @@ public class hardware {
 
         private final PwmControl.PwmRange PwmRange;
 
-        private ServoImplEx servo;
+        public ServoImplEx servo;
 
         private double lastPosition = 0;
 
@@ -215,32 +214,71 @@ public class hardware {
          * Is a shorthand, but not usable for the differential or other combined servo positions.
          */
         public void setServo(servoPositions position){setServo(position.getPosition());}
-
     }
 
     /**
      *
      */
-    public enum servoPositions {
-        intakeGrip(0.76),
-        intakeRelease(0.44),
-        wristTransfer(0.36),
-        wristSampleCamera(0.605),
-        wristSpecimenCamera(0.1),
-        keepSlides(0.5),
-        releaseSlides(0),
+    public enum touchSensors {
+        leftFrontBumper("leftFrontSensor"),
+        rightFrontBumper("rightFrontSensor");
 
-        outtakeGrip(0.54),
-        outtakeRelease(0.0),
-        shoulderTransfer(0.06),
-        shoulderForward(0.84),
-        shoulderBack(0.41),
+        /**
+         *
+         * @param name
+         */
+        touchSensors(String name) {this.name = name;}
+
+        private final String name;
+
+        private TouchSensor sensor;
+
+        /**
+         *
+         * @return
+         */
+        public String getName() {return this.name;}
+
+        /**
+         *
+         * @param map
+         */
+        public void initSensor(HardwareMap map) {
+            sensor = map.get(TouchSensor.class, name);
+        }
+
+        public boolean sensorPressed() {return sensor.isPressed();}
+    }
+
+    public static void initSensors(HardwareMap map) {
+        for (touchSensors sensor : touchSensors.values()) {
+            sensor.initSensor(map);
+        }
+    }
+
+    public static boolean touchingSubmersible() {return touchSensors.leftFrontBumper.sensorPressed() && touchSensors.rightFrontBumper.sensorPressed();}
+
+    /**
+     *
+     */
+    public enum servoPositions {
+        intakeGrip(.9),
+        intakeRelease(.44),
+        wristTransfer(.36),
+        wristSampleCamera(.605),
+        wristSpecimenCamera(.1),
+        keepSlides(.5),
+        releaseSlides(.0),
+
+        outtakeGrip(.31),
+        outtakeRelease(.65),
+        outtakeClear(.9),
 
         elbowLeft(new double[] {0.76,-0.09}),
         elbowRight(new double[] {0.26,-0.063}),
         elbowCentered(new double[]{0.51,-0.07}),
         elbowTransfer(new double[]{0.51, 0.41}),
-        cameraDown(new double[]{0.51,0.19}),
+        cameraDown(new double[]{0.51,0.185}),
         cameraWide(new double[]{0.51,0.34});
 
         servoPositions(double position) {this.position = position;}
@@ -279,8 +317,80 @@ public class hardware {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public static double
-            cameraXPos = 6.8, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
-            cameraYPos = -0.6, //Offset in secondary axis versus the differential shaft of the intake
-            cameraZPos = 26.6, //Height of the camera, relative to the floor
+            cameraXPos = 7.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraYPos = -0.7, //Offset in secondary axis versus the differential shaft of the intake
+            cameraZPos = 28.9, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor
+
+    public static final double baseLength = 37.0;
+    public static final double maxLength = 42*2.54, slideExtension = 72.0;
+    public static final double ticksPerCM = 756/slideExtension,
+            armLength = 13.6,
+            fullLength = armLength + 5.0,
+            armHeight = 10.3,
+            clawLength = 3.7,
+            halfYawRotationInPos = servoPositions.elbowLeft.getDifferential()[0] - servoPositions.elbowRight.getDifferential()[0],
+            quarterPitchRotationInPos = servoPositions.cameraDown.getDifferential()[1] - servoPositions.elbowCentered.getDifferential()[1];
+
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public static double predictArmLength(double pitch, double yaw) {
+        //Turn pos into angles, 0 pitch is down (longest), 0 yaw is forward (longest)
+        pitch = (pitch - servoPositions.elbowCentered.getDifferential()[1]) * Math.PI * 0.5 / quarterPitchRotationInPos;
+        yaw = (yaw - servoPositions.elbowCentered.getDifferential()[0]) * Math.PI / halfYawRotationInPos;
+        double height = (MathFunctions.roughlyEquals(servos.intake.getLastPosition(), servoPositions.intakeGrip.getPosition())) ? armHeight : armHeight - clawLength;
+
+        return Math.cos(yaw) * fullLength * Math.cos(pitch) + Math.sin(pitch) * height;
+    }
+
+    public static double getArmLength() {
+        double yaw = (servos.elbowLeft.getLastPosition() + servos.elbowRight.getLastPosition())/2.0;
+        double pitch = servos.elbowRight.getLastPosition() - servos.elbowLeft.getLastPosition();
+        return predictArmLength(pitch, yaw);
+    }
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public static double getRobotLength() {return predictRobotLength(getSlideLength(), getArmLength());}
+
+    /**
+     * TODO: documentation
+     * @param ticks
+     * @return
+     */
+    public static double predictSlideLength(int ticks) {return ticks/hardware.ticksPerCM;}
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public static double getSlideLength() {return predictSlideLength(hardware.motors.intake.dcMotorEx.getCurrentPosition());}
+
+    /**
+     * TODO: documentation
+     * @param slideLength
+     * @param servoLength
+     * @return
+     */
+    public static double predictRobotLength(double slideLength, double servoLength) {
+        return hardware.baseLength + slideLength + servoLength;
+    }
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public static boolean tooLong() {return getRobotLength() > hardware.maxLength;}
+
+    /**
+     * TODO: documentation
+     * @param length
+     * @return
+     */
+    public static boolean tooLong(double length) {return length > hardware.maxLength;}
 }

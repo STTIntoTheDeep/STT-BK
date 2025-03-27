@@ -34,16 +34,13 @@ public abstract class rootOpMode extends LinearOpMode {
     protected enum intakeStates {IDLE, FIND, ROTATE, DOWN, MOVE, GRAB, BACK, CHECK, PRE_DONE, DONE, WRONG}
     protected intakeStates intakeState = intakeStates.IDLE;
 
-    protected enum transferStates{IDLE, UP, DOWN, TRANSFER, UP_AGAIN, BACK, DOWN_AGAIN, PRE_DONE, DONE}
-    protected transferStates transferState = transferStates.IDLE;
+    protected double continueTime, slideTarget, backPower = -0.25, lastLeftPos, lastRightPos;
 
-    protected double transferTimer, continueTime, shoulderTimer, slideTarget, backPower = -0.35, lastLeftPos, lastRightPos;
-
-    protected boolean TeleOp, changingMode = false, specimenMode = true, intakeOpen = true, outtakeOpen, shoulderBack = false;
+    protected boolean TeleOp, intakeOpen = true, outtakeOpen;
 
     protected Scalar allianceColor = SampleDetectionPipeline.BLUE;
 
-    protected PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9;
+    protected PathChain path1, path2, path3, path4, path5, path6, path7, path8;
     /**
      * TODO: documentation
      * @param TeleOp
@@ -87,107 +84,88 @@ public abstract class rootOpMode extends LinearOpMode {
     }
 
     protected void specimenPaths() {
-        double scoreSpecimenX = 40.7;
-        Point specimenPickUp = new Point(8, 36);
+        double scoreSpecimenX = 39;
+        Point specimenPickUp = new Point(16 , 32.235, Point.CARTESIAN);
         follower.setMaxPower(0.6);
 
-        follower.setStartingPose(new Pose(8.191, 62.5, 0));
+        follower.setStartingPose(new Pose(8.191, 56.279, 0));
         path1 = follower.pathBuilder().addPath(
             // Score first specimen
             new BezierLine(
-                new Point(8.191, 62.5, Point.CARTESIAN),
-                new Point(scoreSpecimenX, 68.5, Point.CARTESIAN)))
+                new Point(8.191, 56.279, Point.CARTESIAN),
+                new Point(scoreSpecimenX, 67.738, Point.CARTESIAN)))
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
         path2 = follower.pathBuilder()
             .addPath(
                 // Get behind first blue sample
                 new BezierCurve(
-                    new Point(scoreSpecimenX, 68.5, Point.CARTESIAN),
-                    new Point(3.963, 52, Point.CARTESIAN),
-                    new Point(13.211, 33, Point.CARTESIAN),
-                    new Point(70, 43.5, Point.CARTESIAN),
-                    new Point(65, 32, Point.CARTESIAN)))
+                    new Point(scoreSpecimenX, 67.738, Point.CARTESIAN),
+                    new Point(3.963, 45.446, Point.CARTESIAN),
+                    new Point(13.211, 26.422, Point.CARTESIAN),
+                    new Point(65.527, 36.198, Point.CARTESIAN),
+                    new Point(60.242, 27, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Score in wing
                     new BezierLine(
-                        new Point(65, 32, Point.CARTESIAN),
-                        new Point(26, 30, Point.CARTESIAN)
+                        new Point(60.242, 27, Point.CARTESIAN),
+                        new Point(21, 27, Point.CARTESIAN)
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
-                .build();
-//                .addPath(
-//                    // Score second blue sample in wing
-//                    new BezierCurve(
-//                        new Point(26, 33.5, Point .CARTESIAN),
-//                        new Point(77, 39.8, Point.CARTESIAN),
-//                        new Point(77, 14.7, Point.CARTESIAN),
-//                        new Point(26, 28.5, Point.CARTESIAN)
-//                    )
-//                )
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
-//                .addPath(
-//                    // Get behind third sample
-//                    new BezierCurve(
-//                        new Point(26, 18, Point.CARTESIAN),
-//                        new Point(79.266, 28, Point.CARTESIAN),
-//                        new Point(57.196, 8, Point.CARTESIAN)
-//                    )
-//                )
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
-//                .addPath(
-//                    // Score third sample in wing
-//                    new BezierCurve(
-//                        new Point(57.196, 8, Point.CARTESIAN),
-//                        new Point(21, 8, Point.CARTESIAN)
-//                    )
-//                )
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
-//                .addPath(
-//                    // Get second specimen
-//                    new BezierCurve(
-//                        new Point(26, 28.5, Point.CARTESIAN),
-//                        new Point(36.462, 36, Point.CARTESIAN),
-//                        specimenPickUp
-//                    )
-//                )
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
-//                .build();
-        path3 = follower.pathBuilder()
+                .addPath(
+                    // Score second blue sample in wing
+                    new BezierCurve(
+                        new Point(21, 27, Point.CARTESIAN),
+                        new Point(75.567, 33.292, Point.CARTESIAN),
+                        new Point(75.303, 8.191, Point.CARTESIAN),
+                        new Point(21, 18, Point.CARTESIAN)
+                    )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                    // Score third blue sample in wing
+                    new BezierCurve(
+                        new Point(21, 18, Point.CARTESIAN),
+                        new Point(79.266, 28, Point.CARTESIAN),
+                        new Point(75.567, 5, Point.CARTESIAN),
+                        new Point(21, 10, Point.CARTESIAN)
+                    )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                     // Get second specimen
                     new BezierCurve(
-                        new Point(26, 30),
-                        new Point(40, 30),
-                        new Point(0,30)
+                        new Point(21, 10, Point.CARTESIAN),
+                        new Point(36.462, 29.593, Point.CARTESIAN),
+                        specimenPickUp
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        path4 = follower.pathBuilder()
+        path3 = follower.pathBuilder()
             .addPath(
                 // score second specimen
-                new BezierCurve(
-                    new Point(0,30),
-                    new Point(30.7,65),
-                    new Point(scoreSpecimenX, 77)
+                new BezierLine(
+                    specimenPickUp,
+                    new Point(scoreSpecimenX, 70, Point.CARTESIAN)
                 )
             )
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
-        path5 = follower.pathBuilder()
+            follower.setMaxPower(1.0);
+        path4 = follower.pathBuilder()
             .addPath(
-                    new BezierCurve(
-                        new Point(scoreSpecimenX, 77, Point.CARTESIAN),
-                        new Point(30.7,65, Point.CARTESIAN),
-                        specimenPickUp
-                    )
+                // Get third specimen
+                new BezierLine(
+                    new Point(scoreSpecimenX, 70, Point.CARTESIAN),
+                    specimenPickUp)
             )
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
-        path6 = follower.pathBuilder()
+            follower.setMaxPower(1.0);
+        path5 = follower.pathBuilder()
             .addPath(
                 // Score third specimen
                 new BezierLine(
@@ -197,16 +175,19 @@ public abstract class rootOpMode extends LinearOpMode {
             )
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
-        path7 = follower.pathBuilder()
+            follower.setMaxPower(1.0);
+        path6 = follower.pathBuilder()
             .addPath(
-                    new BezierCurve(
-                            new Point(scoreSpecimenX, 74, Point.CARTESIAN),
-                            specimenPickUp
-                    )
+                // Get fourth specimen
+                new BezierLine(
+                    new Point(scoreSpecimenX, 74, Point.CARTESIAN),
+                    specimenPickUp
+                )
             )
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
-        path8 = follower.pathBuilder()
+            follower.setMaxPower(1.0);
+        path7 = follower.pathBuilder()
             .addPath(
                 // score fourth specimen
                 new BezierLine(
@@ -216,15 +197,17 @@ public abstract class rootOpMode extends LinearOpMode {
             )
             .setConstantHeadingInterpolation(Math.toRadians(0))
             .build();
-        path9 = follower.pathBuilder()
+            follower.setMaxPower(1.0);
+        path8 = follower.pathBuilder()
                 .addPath(
                     // Park
                     new BezierLine(
-                        new Point(scoreSpecimenX, 70, Point.CARTESIAN),
+                        new Point(scoreSpecimenX, 76, Point.CARTESIAN),
                         new Point(6.056, 21.533, Point.CARTESIAN)
                     )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0)).build();
+            follower.setMaxPower(1.0);
         }
     protected void samplePaths() {
         follower.setStartingPose(new Pose(8, 102, 0));
@@ -277,39 +260,13 @@ public abstract class rootOpMode extends LinearOpMode {
         // This code automatically moves the shoulder to the right position
         lastLeftPos = outtake.leftPos;
         lastRightPos = outtake.rightPos;
-        if (specimenMode) {
-            outtake.slidesWithinLimits(power, 1400);
-            if (lastLeftPos < Outtake.slidePositions.CLEARS_ROBOT.getPosition() && outtake.leftPos >= Outtake.slidePositions.CLEARS_ROBOT.getPosition()) {
-                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-            }
-//            if (outtake.leftPos < 650) {
-//                hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-//            } else hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderForward);
-        } else {
-            outtake.slidesWithinLimits(power);
-            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        }
+        outtake.slidesWithinLimits(power, 1400);
         // Outtake claw toggle
         if (toggle) {
-            shoulderBack = true;
-            shoulderTimer = System.currentTimeMillis() + 400;
             hardware.servos.outtakeClaw.setServo(
                     (hardware.servos.outtakeClaw.getLastPosition() == hardware.servoPositions.outtakeGrip.getPosition())
                             ? hardware.servoPositions.outtakeRelease : hardware.servoPositions.outtakeGrip);
         }
-
-        if (shoulderBack && shoulderTimer < System.currentTimeMillis()) {
-            shoulderBack = false;
-            hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-        }
-    }
-
-        /**
-         * TODO: documentation
-         * @param toSpecimenMode
-         */
-    protected void changeMode(boolean toSpecimenMode) {
-        //TODO: rumble
     }
 
     /**
@@ -317,7 +274,6 @@ public abstract class rootOpMode extends LinearOpMode {
      * @return if it's picked a good sample or not
      */
     protected boolean chooseSample() {
-        hardware.cameraZPos = -3.85E-3 * hardware.motors.intake.dcMotorEx.getCurrentPosition() + 26.7;
         telemetry.addData("count", samplePipeline.count);
         if (bestSampleInformation != null) {
             telemetry.addData("x", bestSampleInformation[0]);
@@ -350,10 +306,10 @@ public abstract class rootOpMode extends LinearOpMode {
 
     public void manualIntakeSequence(boolean next, double power) {
         if (next) {
-            if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
+            if (intakeState == intakeStates.IDLE) {
                 samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
                 intakeState = intakeStates.FIND;
-                intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential()[0], 0.05);
+                intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential()[0], 0.34);
             } else if (intakeState == intakeStates.FIND) {
                 intakeState = intakeStates.DOWN;
                 intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
@@ -369,12 +325,11 @@ public abstract class rootOpMode extends LinearOpMode {
 
         switch (intakeState) {
             case IDLE:
-                if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
+                if (!intake.PIDReady()) intake.slidePID(0);
                 break;
             case FIND:
-                intake.slideWithinLimits(Math.max(power, -0.5));
-                break;
             case DOWN:
+            case DONE:
                 intake.slideWithinLimits(Math.max(power, -0.5));
                 break;
             case GRAB:
@@ -388,8 +343,7 @@ public abstract class rootOpMode extends LinearOpMode {
             case BACK:
                 if (continueTime < System.currentTimeMillis()) {
                     intakeState = intakeStates.PRE_DONE;
-                    if (specimenMode) continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
-                    else continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
+                    continueTime = System.currentTimeMillis() + intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
                 }
                 break;
             case PRE_DONE:
@@ -397,9 +351,6 @@ public abstract class rootOpMode extends LinearOpMode {
                 if (continueTime < System.currentTimeMillis() && hardware.motors.intake.dcMotorEx.getCurrentPosition() < 40) {
                     intakeState = intakeStates.DONE;
                 }
-                break;
-            case DONE:
-                intake.slideWithinLimits(Math.max(power, -0.5));
                 break;
         }
     }
@@ -411,7 +362,7 @@ public abstract class rootOpMode extends LinearOpMode {
      */
     public void simpleIntakeSequence(boolean next, boolean reset, double powerOrPos) {
         if (next) {
-            if (intakeState == intakeStates.IDLE && transferState == transferStates.IDLE) {
+            if (intakeState == intakeStates.IDLE) {
                 samplePipeline.desiredColor = SampleDetectionPipeline.YELLOW;
                 intakeState = intakeStates.FIND;
                 samplePipeline.saveRAM = false;
@@ -430,7 +381,7 @@ public abstract class rootOpMode extends LinearOpMode {
 
         switch (intakeState) {
             case IDLE:
-                if (!intake.PIDReady() && !(transferState == transferStates.DOWN || transferState == transferStates.TRANSFER)) intake.slidePID(0);
+                if (!intake.PIDReady()) intake.slidePID(0);
                 break;
             case FIND:
                 if (TeleOp) {
@@ -479,75 +430,6 @@ public abstract class rootOpMode extends LinearOpMode {
         }
     }
 
-    protected void transfer() {
-        switch (transferState) {
-            case IDLE:
-                if (intakeState == intakeStates.GRAB) {
-                    transferState = transferStates.UP;
-                    hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
-                    transferTimer = System.currentTimeMillis() + 250;
-                }
-                break;
-            case UP:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderTransfer);
-                    transferTimer = System.currentTimeMillis() + 250;
-                    transferState = transferStates.DOWN;
-                }
-                break;
-            case DOWN:
-                if (transferTimer < System.currentTimeMillis() && intakeState == intakeStates.DONE) {
-                    outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-
-                    hardware.motors.intake.setPower(Math.min(intake.calculatePID(-50), backPower));
-
-                    if (outtake.PIDReady() && intake.PIDReady() && transferTimer < System.currentTimeMillis()) {
-                        hardware.motors.intake.setPower(backPower);
-                        transferTimer = System.currentTimeMillis() + 400;
-                        outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                        hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeGrip);
-                        hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
-                        transferState = transferStates.TRANSFER;
-                    }
-                } else outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                break;
-            case TRANSFER:
-                hardware.motors.intake.setPower(backPower);
-                outtake.slidePID(Outtake.slidePositions.TRANSFER.getPosition());
-                if (transferTimer < System.currentTimeMillis() && outtake.PIDReady()) {
-                    transferState = transferStates.UP_AGAIN;
-                    intakeState = intakeStates.IDLE;
-                }
-                break;
-            case UP_AGAIN:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (outtake.PIDReady()) {
-                    transferState = transferStates.BACK;
-                    hardware.servos.shoulder.setServo(hardware.servoPositions.shoulderBack);
-                    transferTimer = 300 + System.currentTimeMillis();
-                }
-                break;
-            case BACK:
-                outtake.slidePID(Outtake.slidePositions.CLEARS_INTAKE.getPosition());
-                if (transferTimer < System.currentTimeMillis()) {
-                    transferState = transferStates.DOWN_AGAIN;
-                }
-                break;
-            case DOWN_AGAIN:
-                outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                if (outtake.PIDReady()) {
-                    transferState = transferStates.DONE;
-                }
-                break;
-            case DONE:
-                //FIXME: this only runs once
-                outtake.slidePID(Outtake.slidePositions.DOWN.getPosition());
-                transferState = transferStates.IDLE;
-                break;
-        }
-    }
-
     protected void chooseAlliance() {
         if (gamepad1.x) {
             allianceColor = SampleDetectionPipeline.BLUE;
@@ -567,7 +449,7 @@ public abstract class rootOpMode extends LinearOpMode {
     protected void sampleCamera() {
         intake.setElbow(hardware.servoPositions.cameraDown.getDifferential());
         hardware.servos.wrist.setServo(hardware.servoPositions.wristSampleCamera);
-        hardware.cameraZPos = 26.7;
+        hardware.cameraZPos = 28.9;
         hardware.cameraAlpha = 0.0;
         hardware.cameraXPos = 6.8;
         hardware.cameraYPos = -0.6;
