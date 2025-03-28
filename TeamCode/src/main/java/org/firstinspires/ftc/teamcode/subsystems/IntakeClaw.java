@@ -26,7 +26,6 @@ public class IntakeClaw extends Subsystem {
                 new Delay(0.25)
         );
     }
-
     public Command close() {
         return new SequentialGroup(
                 new ServoToPosition(hardware.servos.intake.servo, // SERVO TO MOVE

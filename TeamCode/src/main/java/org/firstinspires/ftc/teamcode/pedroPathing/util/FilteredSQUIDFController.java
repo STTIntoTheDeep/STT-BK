@@ -8,7 +8,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.util;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 1.0, 7/15/2024
  */
-public class FilteredPIDFController extends PIDFController{
+public class FilteredSQUIDFController extends PIDFController{
     private CustomFilteredPIDFCoefficients coefficients;
     private double previousDerivative;
     private double filteredDerivative;
@@ -19,7 +19,7 @@ public class FilteredPIDFController extends PIDFController{
      *
      * @param set the coefficients to use.
      */
-    public FilteredPIDFController(CustomFilteredPIDFCoefficients set) {
+    public FilteredSQUIDFController(CustomFilteredPIDFCoefficients set) {
         setCoefficients(set);
         reset();
     }
@@ -31,7 +31,7 @@ public class FilteredPIDFController extends PIDFController{
      */
     @Override
     public double runPIDF() {
-        return error * P() * tuningVoltage / currentVoltage + filteredDerivative * D() * tuningVoltage / currentVoltage + errorIntegral * I() * tuningVoltage / currentVoltage + F() * tuningVoltage / currentVoltage;
+        return Math.signum(error) * Math.sqrt(Math.abs(error)) * P() * tuningVoltage / currentVoltage + filteredDerivative * D() * tuningVoltage / currentVoltage + errorIntegral * I() * tuningVoltage / currentVoltage + F() * tuningVoltage / currentVoltage;
     }
 
     @Override

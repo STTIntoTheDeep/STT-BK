@@ -262,11 +262,11 @@ public class hardware {
      *
      */
     public enum servoPositions {
-        intakeGrip(.9),
+        intakeGrip(.82),
         intakeRelease(.44),
         wristTransfer(.36),
-        wristSampleCamera(.605),
-        wristSpecimenCamera(.1),
+        wristSampleCamera(.39),
+        wristSpecimenCamera(.9),
         keepSlides(.5),
         releaseSlides(.0),
 

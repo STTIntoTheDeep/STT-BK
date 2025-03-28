@@ -62,9 +62,9 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * Threshold values
      */
     public static int
-            AREA_LOWER_LIMIT = 20000,
+            AREA_LOWER_LIMIT = 15000,
             AREA_UPPER_LIMIT = 100000,
-            YELLOW_MASK_THRESHOLD = 100,
+            YELLOW_MASK_THRESHOLD = 90,
             BLUE_MASK_THRESHOLD = 150,
             RED_MASK_THRESHOLD = 170;
 

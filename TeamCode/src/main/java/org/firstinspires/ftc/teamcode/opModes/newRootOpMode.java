@@ -39,6 +39,7 @@ import java.util.List;
 public class newRootOpMode extends NextFTCOpMode {
     public newRootOpMode() {
         super(Arm.INSTANCE,
+                Camera.INSTANCE,
                 Elbow.INSTANCE,
                 IntakeClaw.INSTANCE,
                 OuttakeClaw.INSTANCE,
@@ -68,64 +69,82 @@ public class newRootOpMode extends NextFTCOpMode {
 //                .addPath(new BezierLine(new Point(finishPose), new Point(startPose)))
 //                .setLinearHeadingInterpolation(finishPose.getHeading(), startPose.getHeading())
 //                .build();
-        path1 = follower.pathBuilder()
+        path1 = follower.pathBuilder() //start to submersible
                 .addPath(new BezierCurve(
                         startPoint,
                         new Point(24.738, 67.703, Point.CARTESIAN),
                         new Point(39.580, 67.443, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        path2 = follower.pathBuilder()
+        path2 = follower.pathBuilder() //submersible to back of first sample
                 .addPath(new BezierCurve(
-                        new Point(39.580, 67.443, Point.CARTESIAN),
+                        path1.getPath(0).getLastControlPoint(),
                         new Point(14.843, 63.537, Point.CARTESIAN),
-                        new Point(4.687, 18.228, Point.CARTESIAN),
-                        new Point(91.660, 42.184, Point.CARTESIAN),
-                        new Point(58.590, 26.561, Point.CARTESIAN)))
+                        new Point(4.687, 15, Point.CARTESIAN),
+                        new Point(91.660, 50, Point.CARTESIAN),
+                        new Point(58.590, 32, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
-                .build();
-        path3 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Point(58.590, 26.561, Point.CARTESIAN),
-                        new Point(15.103, 26.561, Point.CARTESIAN)))
+                        new Point(58.590, 32, Point.CARTESIAN),
+                        new Point(22, 32, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(15.103, 26.561, Point.CARTESIAN),
-                        new Point(74.474, 26.821, Point.CARTESIAN),
-                        new Point(58.590, 16.145, Point.CARTESIAN)))
+                        new Point(22, 32, Point.CARTESIAN),
+                        new Point(74.474, 32, Point.CARTESIAN),
+                        new Point(58.590, 25, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
-                .build();
-        path4 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Point(58.590, 16.145, Point.CARTESIAN),
-                        new Point(15.103, 16.145, Point.CARTESIAN)))
+                        new Point(58.590, 25, Point.CARTESIAN),
+                        new Point(22, 25, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(15.103, 16.145, Point.CARTESIAN),
-                        new Point(74.213, 16.665, Point.CARTESIAN),
-                        new Point(58.850, 8.333, Point.CARTESIAN)))
+                        new Point(22, 25, Point.CARTESIAN),
+                        new Point(74.213, 25, Point.CARTESIAN),
+                        new Point(58.850, 18, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        path5 = follower.pathBuilder()
+//        path3 = follower.pathBuilder() //first sample to second sample
+//                .addPath(new BezierLine(
+//                        new Point(58.590, 32, Point.CARTESIAN),
+//                        new Point(22, 32, Point.CARTESIAN)))
+//                .setConstantHeadingInterpolation(Math.toRadians(0))
+//                .addPath(new BezierCurve(
+//                        new Point(22, 32, Point.CARTESIAN),
+//                        new Point(74.474, 32, Point.CARTESIAN),
+//                        new Point(58.590, 25, Point.CARTESIAN)))
+//                .setConstantHeadingInterpolation(Math.toRadians(0))
+//                .build();
+//        path4 = follower.pathBuilder() //second sample to third sample
+//                .addPath(new BezierLine(
+//                        new Point(58.590, 25, Point.CARTESIAN),
+//                        new Point(22, 25, Point.CARTESIAN)))
+//                .setConstantHeadingInterpolation(Math.toRadians(0))
+//                .addPath(new BezierCurve(
+//                        new Point(22, 25, Point.CARTESIAN),
+//                        new Point(74.213, 25, Point.CARTESIAN),
+//                        new Point(58.850, 18, Point.CARTESIAN)))
+//                .setConstantHeadingInterpolation(Math.toRadians(0))
+//                .build();
+        path5 = follower.pathBuilder() //observation zone to obtaining specimen
                 .addPath(new BezierLine(
-                        new Point(58.850, 8.333, Point.CARTESIAN),
-                        new Point(15.103, 7.812, Point.CARTESIAN)))
+                        new Point(58.850, 18, Point.CARTESIAN),
+                        new Point(22, 18, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(15.103, 7.812, Point.CARTESIAN),
+                        new Point(22 , 18, Point.CARTESIAN),
                         new Point(34.633, 31.248, Point.CARTESIAN),
                         new Point(9.374, 51.559, Point.CARTESIAN),
                         new Point(8.593, 25.259, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        path6 = follower.pathBuilder()
+        path6 = follower.pathBuilder() //scoring specimen
                 .addPath(new BezierCurve(
                         new Point(8.593, 25.259, Point.CARTESIAN),
                         new Point(14.061, 65.881, Point.CARTESIAN),
                         new Point(39.320, 69.266, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        path7 = follower.pathBuilder()
+        path7 = follower.pathBuilder() //returning to grab specimen from submersible
                 .addPath(new BezierCurve(
                         new Point(39.320, 69.266, Point.CARTESIAN),
                         new Point(5.989, 60.933, Point.CARTESIAN),
@@ -180,9 +199,8 @@ public class newRootOpMode extends NextFTCOpMode {
         return new SequentialGroup(
                 //Move until you've found a good one
                 new ParallelDeadlineGroup(
-                        new LambdaCommand()
-                                .setStart(() -> Camera.samplePipeline.saveRAM = false)
-                                .setUpdate(Camera::chooseSample),
+                        new InstantCommand(() -> Camera.samplePipeline.saveRAM = false)
+                                .then(new WaitUntil(Camera.INSTANCE::chooseSample)),
                         cameraDown(),
                         (TeleOp) ? Slides.INSTANCE.setPowerWithinLimits(gamepad1.left_trigger - gamepad1.right_trigger) : Slides.INSTANCE.toPosition(500)
                 ),

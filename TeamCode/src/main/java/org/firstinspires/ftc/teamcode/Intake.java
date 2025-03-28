@@ -93,7 +93,7 @@ public class Intake {
     /**
      * In radians, a sample which is wide from left to right (seen from the front of the robot) is angle zero.
      * This is relative to the camera, which moves with the wrist.
-     * @param theta
+     * @param theta the angle (in degrees) towards which the wrist should move (relative to the arm).
      */
     public double wristToAngle(double theta) {
         double halfRotationInPos = hardware.servoPositions.wristSpecimenCamera.getPosition() - hardware.servoPositions.wristSampleCamera.getPosition();
@@ -101,7 +101,7 @@ public class Intake {
 
         theta = (theta * halfRotationInPos) / Math.PI;
         theta = theta + 0.5*halfRotationInPos + hardware.servoPositions.wristSampleCamera.getPosition();
-        while (theta < 0.0) theta += halfRotationInPos;
+        while (theta < 0.25) theta += halfRotationInPos;
         if (theta < 1.0 - halfRotationInPos) {
             if (Math.abs(theta - lastWristPos) > Math.abs(theta + halfRotationInPos - lastWristPos)) {
                 theta += halfRotationInPos;

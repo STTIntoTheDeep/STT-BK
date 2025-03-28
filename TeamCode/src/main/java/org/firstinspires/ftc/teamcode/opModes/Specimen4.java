@@ -6,43 +6,43 @@
 //import org.firstinspires.ftc.teamcode.hardware;
 //import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 //import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
+//import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 //import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
+//import org.firstinspires.ftc.teamcode.pedroPathing.util.Pose;
 //
-//@Autonomous(name = "0+2 spec",group = "Autonomous")
-//public class Specimen2 extends rootOpMode {
+//@Autonomous(name = "DON'T USE 0+3 spec",group = "Autonomous")
+//public class Specimen4 extends rootOpMode {
 //    boolean specimenMode = true, high, goDown = false, outtakeNextState = false;
 //    int state = 0;
 //
-//    double driveTimer;
+//    double driveTimer, intakeTimer, intakeTarget;
 //
 //    @Override
 //    public void runOpMode() {
 //        hardware.reduceHardwareCalls = false;
 //        initialize(false);
-//        intake.setElbow(hardware.servoPositions.elbowTransfer.getDifferential());
 //        hardware.reduceHardwareCalls = true;
 //        specimenPaths();
 //
-//        path2 = follower.pathBuilder().addPath(// Retrieve second specimen
+//        PathChain path10 = follower.pathBuilder().addPath(// Retrieve second specimen
 //                        new BezierLine(
 //                                new Point(40.7, 68.5),
-//                                new Point(4, 28)))
+//                                new Point(6, 36)))
 //                .setConstantHeadingInterpolation(Math.toRadians(0))
 //                .build();
 //
-//        path3 = follower.pathBuilder().addPath(
-//                new BezierCurve(
-//                        path2.getPath(0).getLastControlPoint(),
-//                        new Point(20, 70),
-//                        new Point(41, 85)
-//                )
-//        )
-//        .setConstantHeadingInterpolation(0)
-//        .build();
-//
-//        path4 = follower.pathBuilder().addPath(
+//        PathChain path11 = follower.pathBuilder().addPath(
 //                        new BezierCurve(
-//                                path3.getPath(0).getLastControlPoint(),
+//                                new Point(6, 36),
+//                                new Point(41, 75)
+//                        )
+//                )
+//                .setConstantHeadingInterpolation(0)
+//                .build();
+//
+//        PathChain path12 = follower.pathBuilder().addPath(
+//                        new BezierCurve(
+//                                new Point(41, 75),
 //                                new Point(10, 25)
 //                        )
 //                )
@@ -52,7 +52,9 @@
 //        follower.setMaxPower(0.6);
 //        follower.followPath(path1, true);
 //
-//        waitForStart();
+//        while (!isStarted()) {
+//            chooseAlliance();
+//        }
 //
 //        if (isStopRequested()) return;
 //
@@ -71,7 +73,7 @@
 //                    break;
 //                case 1:// Score first specimen
 //                    if (outtake.specimenStates == Outtake.sequenceStates.DOWN) {
-//                        follower.followPath(path2);
+//                        follower.followPath(path10);
 //                        driveTimer = System.currentTimeMillis() + 3000;
 //                        state++;
 //                    }
@@ -85,26 +87,20 @@
 //                    break;
 //                case 3:// Grab second specimen
 //                    if (driveTimer < System.currentTimeMillis()) {
-//                        follower.followPath(path3);
+//                        follower.followPath(path11);
 //                        driveTimer = System.currentTimeMillis() + 2750;
 //                        state++;
 //                    }
 //                    break;
 //                case 5:
 //                    if (outtake.specimenStates == Outtake.sequenceStates.DOWN) {
-//                        follower.followPath(path4);
+//                        follower.followPath(path12);
 //                        driveTimer = System.currentTimeMillis() + 5000;
 //                        state++;
 //                    }
 //                    break;
-//                case 6:
-//                    follower.breakFollowing();
-//                    hardware.reduceHardwareCalls = false;
-//                    intake.setElbow(hardware.servoPositions.elbowCentered.getDifferential());
-//                    hardware.reduceHardwareCalls = true;
-//                    state++;
-//                    break;
 //            }
+//
 ////            follower.telemetryDebug(telemetry);
 //
 //            if (outtakeNextState) {
@@ -115,6 +111,7 @@
 //            telemetry.addData("outtake", outtake.specimenStates.ordinal());
 //            telemetry.addData("outtakePos", hardware.motors.outtakeLeft.dcMotorEx.getCurrentPosition());
 //            telemetry.addData("state",state);
+//            telemetry.addData("intakeTarget", intakeTarget);
 //            telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
 //            telemetry.addData("leftFront", hardware.motors.leftFront.getLastPower());
 //            telemetry.addData("rightFront", hardware.motors.rightFront.getLastPower());

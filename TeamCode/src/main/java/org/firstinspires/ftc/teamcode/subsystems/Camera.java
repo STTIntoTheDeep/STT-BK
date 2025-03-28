@@ -19,7 +19,7 @@ public class Camera extends Subsystem {
      * Look for sample
      * @return if it's picked a good sample or not
      */
-    public static boolean chooseSample() {
+    public boolean chooseSample() {
         OpModeData.telemetry.addData("count", samplePipeline.count);
         if (bestSampleInformation != null) {
             OpModeData.telemetry.addData("x", bestSampleInformation[0]);

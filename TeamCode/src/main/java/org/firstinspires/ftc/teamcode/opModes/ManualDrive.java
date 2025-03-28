@@ -26,8 +26,9 @@ public class ManualDrive extends rootOpMode {
 
     // By setting these values to new Gamepad(), they will default to all
     // boolean values as false and all float values as 0
-    Gamepad currentGamepad = new Gamepad();
-    Gamepad previousGamepad = new Gamepad();
+    Gamepad currentGamepad = new Gamepad(),
+            previousGamepad = new Gamepad(),
+            previousGamepad2 = new Gamepad();
 
     @Override
     public void runOpMode() {
@@ -54,7 +55,7 @@ public class ManualDrive extends rootOpMode {
         telemetry.setMsTransmissionInterval(25);
 
         while (!isStarted()) {
-            chooseSample();
+            chooseAlliance();
         }
 
         //TODO: you can probably remove this then
@@ -64,7 +65,14 @@ public class ManualDrive extends rootOpMode {
 
         while (opModeIsActive()) {
             previousGamepad.copy(currentGamepad);
+            previousGamepad2.copy(gamepad2);
             currentGamepad.copy(gamepad1);
+
+            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
+                hardware.motors.hook.setPower(1);
+            } else if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
+                hardware.motors.hook.setPower(-1);
+            }
 
             if (currentGamepad.options && !previousGamepad.options) {
                 specimenMode ^= true;

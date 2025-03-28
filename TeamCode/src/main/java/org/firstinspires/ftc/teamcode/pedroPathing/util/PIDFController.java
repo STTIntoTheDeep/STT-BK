@@ -13,18 +13,19 @@ package org.firstinspires.ftc.teamcode.pedroPathing.util;
  * @version 1.0, 3/5/2024
  */
 public class PIDFController {
-    private CustomPIDFCoefficients coefficients;
+    protected CustomPIDFCoefficients coefficients;
+    protected double previousError,
+            error,
+            position,
+            targetPosition,
+            errorIntegral,
+            errorDerivative,
+            feedForwardInput,
+            tuningVoltage = 12.0,
+            currentVoltage = 12.0;
 
-    private double previousError;
-    private double error;
-    private double position;
-    private double targetPosition;
-    private double errorIntegral;
-    private double errorDerivative;
-    private double feedForwardInput;
-
-    private long previousUpdateTimeNano;
-    private long deltaTimeNano;
+    protected long previousUpdateTimeNano,
+            deltaTimeNano;
 
     /**
      * This creates a new PIDFController from a CustomPIDFCoefficients.
@@ -36,13 +37,16 @@ public class PIDFController {
         reset();
     }
 
+    public PIDFController() {
+    }
+
     /**
      * This takes the current error and runs the PIDF on it.
      *
      * @return this returns the value of the PIDF from the current error.
      */
     public double runPIDF() {
-        return error * P() + errorDerivative * D() + errorIntegral * I() + F();
+        return error * P() * tuningVoltage / currentVoltage + errorDerivative * D() * tuningVoltage / currentVoltage + errorIntegral * I() * tuningVoltage / currentVoltage + F() * tuningVoltage / currentVoltage;
     }
 
     /**
@@ -60,8 +64,8 @@ public class PIDFController {
         deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
         previousUpdateTimeNano = System.nanoTime();
 
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
+        errorIntegral += error * (deltaTimeNano / (10.0E9));
+        errorDerivative = (error - previousError) / (deltaTimeNano / (10.0E9));
     }
 
     /**
@@ -77,8 +81,8 @@ public class PIDFController {
         deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
         previousUpdateTimeNano = System.nanoTime();
 
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
+        errorIntegral += error * (deltaTimeNano / (10.0E9));
+        errorDerivative = (error - previousError) / (deltaTimeNano / (10.0E9));
     }
 
     /**
@@ -100,6 +104,7 @@ public class PIDFController {
         targetPosition = 0;
         errorIntegral = 0;
         errorDerivative = 0;
+        currentVoltage = 12.0;
         previousUpdateTimeNano = System.nanoTime();
     }
 
@@ -220,4 +225,28 @@ public class PIDFController {
     public double getError() {
         return error;
     }
+
+    /**
+     * TODO: documentation
+     * @param voltage
+     */
+    public void setTuningVoltage(double voltage) {tuningVoltage = voltage;}
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public double getTuningVoltage() {return tuningVoltage;}
+
+    /**
+     * TODO: documentation
+     * @param currentVoltage
+     */
+    public void setCurrentVoltage(double currentVoltage) {this.currentVoltage = currentVoltage;}
+
+    /**
+     * TODO: documentation
+     * @return
+     */
+    public double getCurrentVoltage() {return currentVoltage;}
 }

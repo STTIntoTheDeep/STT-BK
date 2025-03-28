@@ -34,10 +34,10 @@ public class Sample1 extends rootOpMode {
                     break;
             }
 
-            if (outtakeNextState) {
-                outtake.scoreBasket(true, true);
-                outtakeNextState = false;
-            } else {outtake.scoreBasket(true, false);}
+//            if (outtakeNextState) {
+//                outtake.scoreBasket(true, true);
+//                outtakeNextState = false;
+//            } else {outtake.scoreBasket(true, false);}
 
             follower.telemetryDebug(telemetry);
 

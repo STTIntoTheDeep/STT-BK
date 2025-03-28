@@ -31,10 +31,10 @@ public class SpecTest extends newRootOpMode {
                 new ParallelDeadlineGroup(
                         new WaitUntil(hardware::touchingSubmersible),
                         new FollowPath(path1, true, 1.0, follower)),
-                new FollowPath(path2, follower),
-                new FollowPath(path3, follower),
-                new FollowPath(path4, follower),
-                new FollowPath(path5, follower),
+                new FollowPath(path2, false, 0.6, follower),
+//                new FollowPath(path3, false, 0.6, follower),
+//                new FollowPath(path4, false, 0.6, follower),
+                new FollowPath(path5, false, 0.6, follower),
                 new FollowPath(path6, follower),
                 new FollowPath(path7, follower))
         .invoke();
