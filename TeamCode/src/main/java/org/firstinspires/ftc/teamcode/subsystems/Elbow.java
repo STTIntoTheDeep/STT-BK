@@ -3,10 +3,9 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.rowanmcalpin.nextftc.core.Subsystem;
 import com.rowanmcalpin.nextftc.core.command.Command;
-import com.rowanmcalpin.nextftc.core.command.groups.CommandGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
-import com.rowanmcalpin.nextftc.core.command.utility.LambdaCommand;
+import com.rowanmcalpin.nextftc.core.command.utility.conditionals.BlockingConditionalCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
 import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.hardware.ServoToPosition;
@@ -16,7 +15,6 @@ import org.firstinspires.ftc.teamcode.hardware;
 public class Elbow extends Subsystem {
     // BOILERPLATE
     public static final Elbow INSTANCE = new Elbow();
-    private Elbow() { }
 
     // USER CODE
     public Servo left, right;
@@ -27,6 +25,7 @@ public class Elbow extends Subsystem {
      * @return
      */
     public Command cameraDown() {return setElbow(hardware.servoPositions.cameraDown.getDifferential());}
+    public Command cameraWide() {return setElbow(hardware.servoPositions.cameraWide.getDifferential());}
 
     /**
      * Centimeters perpendicular to the slides, negative is to the left

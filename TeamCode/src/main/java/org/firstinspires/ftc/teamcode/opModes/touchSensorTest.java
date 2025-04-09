@@ -32,8 +32,14 @@ public class touchSensorTest extends LinearOpMode {
             hardware.motors.rightFront.setPower(gamepad1.left_trigger);
             hardware.motors.leftBack.setPower(gamepad1.left_trigger);
             hardware.motors.rightBack.setPower(gamepad1.left_trigger);
-            telemetry.addData("left", hardware.touchSensors.leftFrontBumper.sensorPressed());
-            telemetry.addData("right", hardware.touchSensors.rightFrontBumper.sensorPressed());
+            telemetry.addData("left", hardware.touchSensors.leftFrontBumper.pressed());
+            telemetry.addData("right", hardware.touchSensors.rightFrontBumper.pressed());
+            telemetry.addData("armDown", hardware.touchSensors.armDown.pressed());
+            telemetry.addData("armUp", hardware.touchSensors.armUp.pressed());
+            telemetry.addData("leftBackBumper", hardware.touchSensors.leftBackBumper.pressed());
+            telemetry.addData("rightBackBumper", hardware.touchSensors.rightBackBumper.pressed());
+            telemetry.addData("clawGrab", hardware.touchSensors.clawGrab.pressed());
+            telemetry.addData("clawScore", hardware.touchSensors.clawScore.pressed());
             telemetry.addData("voltage", voltage);
             telemetry.update();
         }

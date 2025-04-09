@@ -33,9 +33,10 @@ import java.util.ArrayList;
 public class SampleDetectionPipeline extends OpenCvPipeline {
     boolean debug;
     public SampleDetectionPipeline(boolean localDebug){debug = localDebug;}
-    public boolean saveRAM = true;
-    public volatile double[] bestSampleInformation;
-    public int count;
+    public boolean saveRAM = true, cameraWorking = false;
+    public volatile double[] externalBestSampleInformation;
+    public int count, runs = 0;
+    public String mean;
 
     /*
      * Working image buffers
@@ -64,7 +65,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     public static int
             AREA_LOWER_LIMIT = 15000,
             AREA_UPPER_LIMIT = 100000,
-            YELLOW_MASK_THRESHOLD = 90,
+            YELLOW_MASK_THRESHOLD = 140,
             BLUE_MASK_THRESHOLD = 150,
             RED_MASK_THRESHOLD = 170;
 
@@ -103,7 +104,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
          */
         void inferY() {
             cameraYAngle = (cameraPosition.y - 0.5 * yPixels) * yDegreePerPixel;
-            actualY = cameraZPos * Math.tan(Math.toRadians(cameraAlpha - cameraYAngle)) + cameraXPos;
+            actualY = cameraZPos * Math.tan(Math.toRadians(cameraAlpha - cameraYAngle)) / 2 + cameraXPos;
             //TODO: correct for intake offset
         }
 
@@ -113,7 +114,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
          */
         void inferX() {
             cameraXAngle = (cameraPosition.x - 0.5 * xPixels) * xDegreePerPixel;
-            actualX = (cameraZPos / Math.cos(Math.toRadians(cameraAlpha - cameraYAngle)))*Math.tan(Math.toRadians(cameraXAngle)) * scaleX(cameraYAngle) - cameraYPos;
+            actualX = (cameraZPos / Math.cos(Math.toRadians(cameraAlpha - cameraYAngle)))*Math.tan(Math.toRadians(cameraXAngle)) * 1.75 - cameraYPos;
         }
 
         /**
@@ -131,16 +132,6 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
             score -= (int) actualY;
             score -= (int) Math.pow(actualX, 2);
             //FIXME
-        }
-        /**
-         * TODO: documentation
-         * TODO: delete because rectilinear
-         * @param y
-         * @return
-         */
-        double scaleX(double y) {
-            return 1.75;
-//            return Math.cos(Math.toRadians(9*Math.sqrt(3025.0/377.0))) * y + 1; //TODO regression
         }
     }
 
@@ -181,7 +172,30 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
     @Override
     public Mat processFrame(Mat input) {
         if (saveRAM) return input;
+        mean = Core.mean(input).toString();
+//        if (Core.mean(input).equals(WHITE)) {
+//            cameraWorking = false;
+//            return input;
+//        } else {
+//            cameraWorking = true;
+//        }
+        runs++;
         internalSampleList.clear();
+
+        //FIXME: do not reassign Mats in processFrame
+        YCbCrMat.empty();
+        CrMat.empty();
+        CbMat.empty();
+
+        blueThresholdMat.empty();
+        redThresholdMat.empty();
+        yellowThresholdMat.empty();
+
+        morphedBlueThreshold.empty();
+        morphedRedThreshold.empty();
+        morphedYellowThreshold.empty();
+
+        contoursOnPlainImageMat.empty();
 
         /*
          * Run the image processing
@@ -190,9 +204,11 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
         //TODO: only calculate for desired color
         findContours(input);
         count = internalSampleList.size();
-        bestSampleInformation = getBestSampleInformation(internalSampleList);
-        if (debug) if (bestSample != null) if (bestSample.cameraPosition != null) Imgproc.circle(input, bestSample.cameraPosition, 15, WHITE);
-
+        double[] bestSampleInformation = getBestSampleInformation(internalSampleList);
+        if (bestSample != null) if (bestSample.cameraPosition != null) {
+            externalBestSampleInformation = bestSampleInformation;
+            if (debug) Imgproc.circle(input, bestSample.cameraPosition, 15, WHITE);
+        }
 
         /*
          * Decide which buffer to send to the viewport
@@ -380,9 +396,10 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * @param sampleList
      * @return
      */
-    public void getBestSample(ArrayList<Sample> sampleList) {
+    private void getBestSample(ArrayList<Sample> sampleList) {
+        bestSample = null;
         if (!sampleList.isEmpty()) {
-            bestSample = null;
+//            if (sampleList.size() == 1) bestSample = sampleList.get(0);
             for (Sample sample : sampleList) {
                 if (sample.color == desiredColor) {
                     sample.inferY();
@@ -393,11 +410,11 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
                     else if (sample.score > bestSample.score) bestSample = sample;
                 }
 
-    //        sample.yFromBorder;
-    //        sample.xFromBorder;
+//            sample.yFromBorder;
+//            sample.xFromBorder;
                 //TODO: if too close to border remove from sampleList
             }
-        } else bestSample = null;
+        }
     }
 
     /**
@@ -405,7 +422,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
      * @param sampleList
      * @return
      */
-    public double[] getBestSampleInformation(ArrayList<Sample> sampleList) {
+    private double[] getBestSampleInformation(ArrayList<Sample> sampleList) {
         getBestSample(sampleList);
         if (bestSample == null) return null;
         return new double[] {bestSample.actualX, bestSample.actualY, bestSample.grabAngle};

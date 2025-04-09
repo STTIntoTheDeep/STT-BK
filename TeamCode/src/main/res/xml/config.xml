@@ -6,7 +6,8 @@
 <Robot type="FirstInspires-FTC">
 
     <!--Camera 1-->
-    <Webcam name="Webcam 1" serialNumber="6B2E2540"/>
+<!--    <Webcam name="Webcam 1" serialNumber="6B2E2540"/>-->
+    <Webcam name="Webcam 1" serialNumber="76A5EE80"/>
 
     <!--This line declares the Control Hub Portal which contains both hubs. It can be copy-pasted-->
     <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
@@ -51,13 +52,17 @@
             <Servo name="wrist" port="5"/>
 
 <!--            <ControlHubImuBHI260AP name="imu" port="0" bus="0"/>-->
-
             <SparkFunOTOS name="OTOS" port="0" bus="2"/>
 
             <RevTouchSensor name="leftFrontSensor" port="0"/>
             <RevTouchSensor name="rightFrontSensor" port="1"/>
+            <RevTouchSensor name="armDown" port="2"/>
+            <RevTouchSensor name="armUp" port="3"/>
+            <RevTouchSensor name="rightBackSensor" port="4"/>
+            <RevTouchSensor name="leftBackSensor" port="5"/>
+            <RevTouchSensor name="clawGrab" port="6"/>
+            <RevTouchSensor name="clawScore" port="7"/>
 
-            <ControlHubImuBHI260AP name="imu" port="0" bus="0"/>
 
             <!--This line signifies that the Control Hub configuration has ended.-->
         </LynxModule>

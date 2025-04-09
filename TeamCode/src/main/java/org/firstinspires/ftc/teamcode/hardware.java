@@ -221,7 +221,13 @@ public class hardware {
      */
     public enum touchSensors {
         leftFrontBumper("leftFrontSensor"),
-        rightFrontBumper("rightFrontSensor");
+        rightFrontBumper("rightFrontSensor"),
+        armDown("armDown"),
+        armUp("armUp"),
+        leftBackBumper("leftBackSensor"),
+        rightBackBumper("rightBackSensor"),
+        clawGrab("clawGrab"),
+        clawScore("clawScore");
 
         /**
          *
@@ -247,7 +253,7 @@ public class hardware {
             sensor = map.get(TouchSensor.class, name);
         }
 
-        public boolean sensorPressed() {return sensor.isPressed();}
+        public boolean pressed() {return sensor.isPressed();}
     }
 
     public static void initSensors(HardwareMap map) {
@@ -256,13 +262,15 @@ public class hardware {
         }
     }
 
-    public static boolean touchingSubmersible() {return touchSensors.leftFrontBumper.sensorPressed() && touchSensors.rightFrontBumper.sensorPressed();}
+    public static boolean touchingSubmersible() {return touchSensors.leftFrontBumper.pressed() && touchSensors.rightFrontBumper.pressed();}
+    public static boolean touchingBorder() {return touchSensors.leftBackBumper.pressed() && touchSensors.rightBackBumper.pressed();}
+
 
     /**
      *
      */
     public enum servoPositions {
-        intakeGrip(.82),
+        intakeGrip(.88),
         intakeRelease(.44),
         wristTransfer(.36),
         wristSampleCamera(.39),
@@ -276,10 +284,11 @@ public class hardware {
 
         elbowLeft(new double[] {0.76,-0.09}),
         elbowRight(new double[] {0.26,-0.063}),
-        elbowCentered(new double[]{0.51,-0.07}),
-        elbowTransfer(new double[]{0.51, 0.41}),
-        cameraDown(new double[]{0.51,0.185}),
-        cameraWide(new double[]{0.51,0.34});
+        elbowCentered(new double[]{0.52,-0.07}),
+        elbowTransfer(new double[]{0.52, 0.41}),
+        elbowDrop(new double[]{0.2,0.185}),
+        cameraDown(new double[]{0.52,0.185}),
+        cameraWide(new double[]{0.52,0.28});
 
         servoPositions(double position) {this.position = position;}
         private double position;
@@ -317,7 +326,7 @@ public class hardware {
             yDegreePerPixel = 16 * Math.sqrt(3025.0/337.0) / yPixels,//14:25 ratio on the camera * sqrt ( 55 degrees squared / (14^2 + 25^2) ) = horizontal FOV, divided by pixels to get degree per pixel TODO maybe regression better
             xDegreePerPixel = 9 * Math.sqrt(3025.0/337.0) / xPixels; //TODO maybe regression better
     public static double
-            cameraXPos = 7.0, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
+            cameraXPos = 8.5, //In init, primary axis (x is forwards/backwards) offset versus the differential shaft of the intake
             cameraYPos = -0.7, //Offset in secondary axis versus the differential shaft of the intake
             cameraZPos = 28.9, //Height of the camera, relative to the floor
             cameraAlpha = 0.0; //In degrees, will be converted to radians later, 0 means parallel to the floor

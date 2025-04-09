@@ -275,14 +275,15 @@ public abstract class rootOpMode extends LinearOpMode {
      */
     protected boolean chooseSample() {
         telemetry.addData("count", samplePipeline.count);
-        if (bestSampleInformation != null) {
-            telemetry.addData("x", bestSampleInformation[0]);
-            telemetry.addData("y", bestSampleInformation[1]);
-            telemetry.addData("angle", bestSampleInformation[2]);
+        if (samplePipeline.externalBestSampleInformation == null) {
+            telemetry.addLine("No best sample");
+            return false;
         }
-        else telemetry.addLine("No best sample");
-        if (samplePipeline.bestSampleInformation == null) return false;
-        bestSampleInformation = samplePipeline.bestSampleInformation;
+        bestSampleInformation = samplePipeline.externalBestSampleInformation;
+
+        telemetry.addData("x", bestSampleInformation[0]);
+        telemetry.addData("y", bestSampleInformation[1]);
+        telemetry.addData("angle", bestSampleInformation[2]);
 
         double total = intake.getSlideLength() + bestSampleInformation[1];
 
@@ -453,7 +454,7 @@ public abstract class rootOpMode extends LinearOpMode {
         hardware.cameraAlpha = 0.0;
         hardware.cameraXPos = 6.8;
         hardware.cameraYPos = -0.6;
-        samplePipeline.AREA_LOWER_LIMIT = 30000;
+        samplePipeline.AREA_LOWER_LIMIT = 15000;
         //TODO: change maximum area
     }
 

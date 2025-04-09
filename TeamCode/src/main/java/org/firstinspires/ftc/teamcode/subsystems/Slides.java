@@ -19,7 +19,7 @@ public class Slides extends Subsystem {
     private Slides() { }
     public MotorEx motor;
 
-    public PIDFController controller = new PIDFController(0.02, 0.0, 0.0, new StaticFeedforward(0.0));
+    public PIDFController controller = new PIDFController(0.03, 0.0, 0.0, new StaticFeedforward(0.0));
 
     public Command setPower(double power) {
         return new SetPower(motor, power, this);

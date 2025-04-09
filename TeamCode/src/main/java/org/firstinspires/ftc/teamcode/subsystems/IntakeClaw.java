@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.rowanmcalpin.nextftc.core.Subsystem;
 import com.rowanmcalpin.nextftc.core.command.Command;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
+import com.rowanmcalpin.nextftc.core.command.utility.conditionals.BlockingConditionalCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
 import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.hardware.ServoToPosition;
@@ -32,6 +33,14 @@ public class IntakeClaw extends Subsystem {
                         hardware.servoPositions.intakeGrip.getPosition(), // POSITION TO MOVE TO
                         this), // IMPLEMENTED SUBSYSTEM
                 new Delay(0.25));
+    }
+
+    public Command intakeToggle(){
+        return new BlockingConditionalCommand(
+                () -> servo.getPosition() == hardware.servoPositions.intakeGrip.getPosition(),
+                this::open,
+                this::close
+        );
     }
 
     @Override

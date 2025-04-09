@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.hardware;
 @TeleOp(name = "OpenCV Testing")
 @Config
 public class specimenCameraTune extends LinearOpMode {
-    SpecimenDetectionPipeline pipeline = new SpecimenDetectionPipeline();
+    SpecimenDetectionPipeline pipeline = new SpecimenDetectionPipeline(true);
 
     @Override
     public void runOpMode() {

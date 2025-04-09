@@ -18,9 +18,10 @@ import org.firstinspires.ftc.teamcode.hardware;
 
 public class Arm extends Subsystem {
     public static final Arm INSTANCE = new Arm();
-    private Arm() {}
     // USER CODE
     public MotorEx motor;
+    boolean armDown, previousArmDown;
+    double timer = 0;
 
     public PIDFController controller = new PIDFController(0.006, 0.0, 0.0, new StaticFeedforward(0), 20);
 //new ArmFeedforward(0.3, ticksToAngle -> 750/Math.PI)
@@ -34,12 +35,7 @@ public class Arm extends Subsystem {
 
     public Command toDown() {
         return new ParallelRaceGroup(
-                new WaitUntil(() -> false).then(//Limit switch
-                        new InstantCommand(() -> {
-                            hardware.motors.outtake.dcMotorEx.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                            hardware.motors.outtake.dcMotorEx.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                        }
-                        )),
+                new WaitUntil(hardware.touchSensors.armDown::pressed).then(reset()),
                 toPosition(0)
         );
     }
@@ -69,6 +65,12 @@ public class Arm extends Subsystem {
 
     @Override
     public void periodic() {
+        if (timer + 250 < System.currentTimeMillis()) {
+            timer += 250;
+            previousArmDown = armDown;
+            armDown = hardware.touchSensors.armDown.pressed();
+            if (armDown && !previousArmDown) reset();
+        }
         OpModeData.telemetry.addData("pos", motor.getCurrentPosition());
 //        OpModeData.telemetry.update();
     }

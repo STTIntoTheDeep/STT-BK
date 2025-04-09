@@ -13,7 +13,7 @@ public class intakeTest extends rootOpMode {
     Gamepad previousGamepad = new Gamepad();
 
     public static int target = 0;
-    public static double cm = 0, pitch = 0.18, yaw = 0.51, angle, claw, backPower = -0.25;
+    public static double cm = 0, pitch = 0.185, yaw = 0.51, angle, claw, backPower = -0.25;
     //pitch -0.135 is down, 0.35 is transfer, 0.14 is camera 0, 0.245 is camera 45 degree
     // yaw 0.56 is parallel, 0.31 is right, 0.82 is left
 
@@ -29,6 +29,7 @@ public class intakeTest extends rootOpMode {
         hardware.servos.intake.setServo(hardware.servoPositions.intakeRelease);
         hardware.servos.outtakeClaw.setServo(hardware.servoPositions.outtakeRelease);
         hardware.reduceHardwareCalls = true;
+        samplePipeline.saveRAM = false;
 
         while (!isStarted() && !isStopRequested()) {
             chooseAlliance();
@@ -51,9 +52,9 @@ public class intakeTest extends rootOpMode {
 
 //            simpleIntakeSequence(currentGamepad.y && !previousGamepad.y, currentGamepad.a, currentGamepad.right_trigger  -currentGamepad.left_trigger);
 
-//            intake.slideCM(cm);
+            intake.slideCM(cm);
 
-//            intake.setElbow(yaw, pitch);
+            intake.setElbow(yaw, pitch);
 //            intake.elbowYDistance(cm);
 
 //            intake.wristToAngle(Math.toRadians(angle) + 0.5*Math.PI - Math.acos(cm/intake.armLength));
@@ -65,6 +66,10 @@ public class intakeTest extends rootOpMode {
 //                open ^= true;
 //                hardware.servos.intake.setServo((open) ? hardware.servoPositions.intakeRelease : hardware.servoPositions.intakeGrip);
 //            }
+
+            telemetry.addData("saveRAM", samplePipeline.saveRAM);
+//            telemetry.addData("camera working", samplePipeline.cameraWorking);
+//            telemetry.addData("camera mean", samplePipeline.mean);
 
             telemetry.addData("intake ordinal", intakeState.ordinal());
             telemetry.addData("right pos", hardware.motors.outtake.dcMotorEx.getCurrentPosition());

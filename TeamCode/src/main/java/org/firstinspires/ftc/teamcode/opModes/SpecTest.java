@@ -28,9 +28,7 @@ public class SpecTest extends newRootOpMode {
 //                                new WaitUntil(hardware::touchingSubmersible)
 //                        ),scoreSpecimen()
 //                ),
-                new ParallelDeadlineGroup(
-                        new WaitUntil(hardware::touchingSubmersible),
-                        new FollowPath(path1, true, 1.0, follower)),
+                driveToSubmersible(new FollowPath(path1, true, 1.0, follower)),
                 new FollowPath(path2, false, 0.6, follower),
 //                new FollowPath(path3, false, 0.6, follower),
 //                new FollowPath(path4, false, 0.6, follower),
