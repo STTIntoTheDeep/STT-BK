@@ -110,6 +110,7 @@ public class CommandTest extends newRootOpMode {
     public void onStartButtonPressed() {
 //        new FollowPath(move, follower).invoke();
         gamepadManager.getGamepad1().getDpadUp().setPressedCommand(this::locateSampleSimple);
+        gamepadManager.getGamepad1().getDpadUp().setHeldCommand(() -> Slides.INSTANCE.setPowerWithinLimits(-gamepad1.right_stick_y));
 //        gamepadManager.getGamepad1().getDpadLeft().setPressedCommand(this::b);
 //        gamepadManager.getGamepad1().getDpadDown().setPressedCommand(this::c);
 //        gamepadManager.getGamepad1().getDpadRight().setPressedCommand(this::d);

@@ -27,19 +27,20 @@ public class Wrist extends Subsystem {
         return new ServoToPosition(servo, hardware.servoPositions.wristSpecimenCamera.getPosition(), this);
     }
 
+    double lowerLimit = 0.26, upperLimit = 1.0, symmetries = 2;
     public Command toAngle(double theta) {
         lastWristPos = hardware.servos.wrist.getLastPosition();
         theta = (theta * halfRotationInPos) / Math.PI;
-        theta = theta + 0.5*halfRotationInPos + hardware.servoPositions.wristSampleCamera.getPosition();
-        while (theta < 0.0) theta += halfRotationInPos;
-        if (theta < 1.0 - halfRotationInPos) {
+        theta = theta + halfRotationInPos/symmetries + hardware.servoPositions.wristSampleCamera.getPosition();
+        while (theta < lowerLimit) theta += halfRotationInPos;
+        if (theta < upperLimit - halfRotationInPos) {
             if (Math.abs(theta - lastWristPos) > Math.abs(theta + halfRotationInPos - lastWristPos)) {
                 theta += halfRotationInPos;
             }
         }
 
-        while (theta > 1.0) theta -= halfRotationInPos;
-        if (theta > 0.0 + halfRotationInPos) {
+        while (theta > upperLimit) theta -= halfRotationInPos;
+        if (theta > lowerLimit + halfRotationInPos) {
             if (Math.abs(theta - lastWristPos) > Math.abs(theta - halfRotationInPos - lastWristPos)) {
                 theta -= halfRotationInPos;
             }

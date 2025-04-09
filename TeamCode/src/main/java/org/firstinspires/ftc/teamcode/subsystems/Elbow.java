@@ -26,6 +26,15 @@ public class Elbow extends Subsystem {
      */
     public Command cameraDown() {return setElbow(hardware.servoPositions.cameraDown.getDifferential());}
     public Command cameraWide() {return setElbow(hardware.servoPositions.cameraWide.getDifferential());}
+    public Command toTransfer() {return setElbow(hardware.servoPositions.elbowTransfer.getDifferential());}
+    public Command toDown() {return setElbow(hardware.servoPositions.elbowDrop.getDifferential());}
+    public Command toggle(){
+        return new BlockingConditionalCommand(
+                () -> left.getPosition() == hardware.servoPositions.elbowDrop.getDifferential()[0] - hardware.servoPositions.elbowDrop.getDifferential()[1],
+                this::toTransfer,
+                this::toDown
+        );
+    }
 
     /**
      * Centimeters perpendicular to the slides, negative is to the left

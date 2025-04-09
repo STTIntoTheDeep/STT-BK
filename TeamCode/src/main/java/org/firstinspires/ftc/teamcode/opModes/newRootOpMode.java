@@ -207,7 +207,7 @@ public class newRootOpMode extends NextFTCOpMode {
     protected Command locateSampleSimple() {
         //Move until you've found a good one
         return new SequentialGroup(
-                Slides.INSTANCE.toCM(20),
+                new WaitUntil(() -> hardware.getSlideLength() > 20),
                 cameraDown(),
                 new Delay(0.075),
                 Camera.INSTANCE.locateSampleSimple(),
@@ -256,7 +256,7 @@ public class newRootOpMode extends NextFTCOpMode {
     }
 
     protected Command dropSample() {
-        return new SequentialGroup(Slides.INSTANCE.toCM(10), Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowDrop.getDifferential()));
+        return new SequentialGroup(Slides.INSTANCE.toCM(10), Elbow.INSTANCE.cameraDown(), Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowDrop.getDifferential()));
     }
 
     /**

@@ -270,11 +270,11 @@ public class hardware {
      *
      */
     public enum servoPositions {
-        intakeGrip(.88),
-        intakeRelease(.44),
-        wristTransfer(.36),
-        wristSampleCamera(.39),
-        wristSpecimenCamera(.9),
+        intakeGrip(.91),
+        intakeRelease(.48),
+        wristTransfer(.615),
+        wristSampleCamera(.37),
+        wristSpecimenCamera(.87),
         keepSlides(.5),
         releaseSlides(.0),
 
@@ -334,7 +334,7 @@ public class hardware {
     public static final double baseLength = 37.0;
     public static final double maxLength = 42*2.54, slideExtension = 72.0;
     public static final double ticksPerCM = 756/slideExtension,
-            armLength = 13.6,
+            armLength = 13.7,
             fullLength = armLength + 5.0,
             armHeight = 10.3,
             clawLength = 3.7,

@@ -2,8 +2,12 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.rowanmcalpin.nextftc.core.command.Command;
 
+import org.firstinspires.ftc.teamcode.subsystems.Elbow;
+import org.firstinspires.ftc.teamcode.subsystems.IntakeClaw;
 import org.firstinspires.ftc.teamcode.subsystems.OuttakeClaw;
+import org.firstinspires.ftc.teamcode.subsystems.Slides;
 
 @Config
 @TeleOp(name = "Command Drive")
@@ -29,8 +33,12 @@ public class CommandDrive extends newRootOpMode {
 
         gamepadManager.getGamepad1().getA().setPressedCommand(this::dropSample);
         gamepadManager.getGamepad1().getB().setPressedCommand(this::retractIntake);
+        gamepadManager.getGamepad1().getX().setPressedCommand(IntakeClaw.INSTANCE::intakeToggle);
+        gamepadManager.getGamepad1().getY().setPressedCommand(Elbow.INSTANCE::toggle);
         gamepadManager.getGamepad1().getRightBumper().setPressedCommand(this::locateSampleSimple);
+        gamepadManager.getGamepad1().getRightBumper().setHeldCommand(() -> Slides.INSTANCE.setPowerWithinLimits(-gamepad1.right_stick_y));
         gamepadManager.getGamepad1().getRightBumper().setReleasedCommand(this::grabSequenceWithCheck);
+//        Slides.INSTANCE.setPowerWithinLimits(-gamepad1.right_stick_y);
 
 //        gamepadManager.getGamepad1().getRightBumper().setPressedCommand(newRootOpMode::grabSpecimen);
 //        gamepadManager.getGamepad1().getDpadRight().setPressedCommand(newRootOpMode::scoreSpecimen);

@@ -35,7 +35,7 @@ public class Intake {
     private final double baseLength = 37.0;
     final double maxLength = 108.0, slideExtension = 72;
     public final double ticksPerCM = 756/slideExtension, armLength = 13.6;
-    double elbowAngle, lastLeftPos, lastRightPos, lastWristPos;
+    double elbowAngle, lastLeftPos, lastRightPos, lastWristPos, halfRotationInPos = hardware.servoPositions.wristSpecimenCamera.getPosition() - hardware.servoPositions.wristSampleCamera.getPosition();
 
     /**
      * TODO: documentation
@@ -95,21 +95,20 @@ public class Intake {
      * This is relative to the camera, which moves with the wrist.
      * @param theta the angle (in degrees) towards which the wrist should move (relative to the arm).
      */
+    double lowerLimit = 0.26, upperLimit = 1.0, symmetries = 2;
     public double wristToAngle(double theta) {
-        double halfRotationInPos = hardware.servoPositions.wristSpecimenCamera.getPosition() - hardware.servoPositions.wristSampleCamera.getPosition();
         lastWristPos = hardware.servos.wrist.getLastPosition();
-
         theta = (theta * halfRotationInPos) / Math.PI;
-        theta = theta + 0.5*halfRotationInPos + hardware.servoPositions.wristSampleCamera.getPosition();
-        while (theta < 0.25) theta += halfRotationInPos;
-        if (theta < 1.0 - halfRotationInPos) {
+        theta = theta + halfRotationInPos/symmetries + hardware.servoPositions.wristSampleCamera.getPosition();
+        while (theta < lowerLimit) theta += halfRotationInPos;
+        if (theta < upperLimit - halfRotationInPos) {
             if (Math.abs(theta - lastWristPos) > Math.abs(theta + halfRotationInPos - lastWristPos)) {
                 theta += halfRotationInPos;
             }
         }
 
-        while (theta > 1.0) theta -= halfRotationInPos;
-        if (theta > 0.0 + halfRotationInPos) {
+        while (theta > upperLimit) theta -= halfRotationInPos;
+        if (theta > lowerLimit + halfRotationInPos) {
             if (Math.abs(theta - lastWristPos) > Math.abs(theta - halfRotationInPos - lastWristPos)) {
                 theta -= halfRotationInPos;
             }
