@@ -13,7 +13,7 @@
     <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
 
         <!--This line declares the Expansion Hub. We use RS485 connection, so we declare it with a port.-->
-            <LynxModule name="Expansion Hub 2" port="2"> <!-- You can see the port on the hub or on the REV Hardware Client. -->
+            <LynxModule name="Expansion Hub 1" port="1"> <!-- You can see the port on the hub or on the REV Hardware Client. -->
 
             <!--These are the Expansion Hub's motors. Change the ports and names of your motors.-->
             <goBILDA5201SeriesMotor name="left_front" port="0"/>
@@ -54,14 +54,14 @@
 <!--            <ControlHubImuBHI260AP name="imu" port="0" bus="0"/>-->
             <SparkFunOTOS name="OTOS" port="0" bus="2"/>
 
-            <RevTouchSensor name="leftFrontSensor" port="0"/>
-            <RevTouchSensor name="rightFrontSensor" port="1"/>
+            <RevTouchSensor name="rightFrontSensor" port="0"/>
+            <RevTouchSensor name="leftFrontSensor" port="1"/>
             <RevTouchSensor name="armDown" port="2"/>
             <RevTouchSensor name="armUp" port="3"/>
-            <RevTouchSensor name="rightBackSensor" port="4"/>
-            <RevTouchSensor name="leftBackSensor" port="5"/>
-            <RevTouchSensor name="clawGrab" port="6"/>
-            <RevTouchSensor name="clawScore" port="7"/>
+            <RevTouchSensor name="leftBackSensor" port="4"/>
+            <RevTouchSensor name="rightBackSensor" port="5"/>
+            <RevTouchSensor name="clawScore" port="6"/>
+            <RevTouchSensor name="clawGrab " port="7"/>
 
 
             <!--This line signifies that the Control Hub configuration has ended.-->

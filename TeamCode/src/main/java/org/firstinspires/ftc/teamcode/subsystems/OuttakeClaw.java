@@ -6,6 +6,7 @@ import com.rowanmcalpin.nextftc.core.command.Command;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
 import com.rowanmcalpin.nextftc.core.command.utility.conditionals.BlockingConditionalCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
+import com.rowanmcalpin.nextftc.core.command.utility.delays.WaitUntil;
 import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.hardware.ServoToPosition;
 
@@ -46,6 +47,13 @@ public class OuttakeClaw extends Subsystem {
                         hardware.servoPositions.outtakeGrip.getPosition(), // POSITION TO MOVE TO
                         this), // IMPLEMENTED SUBSYSTEM
                 new Delay(timer)
+        );
+    }
+
+    public Command closeWhenSample() {
+        return new SequentialGroup(
+                new WaitUntil(hardware.touchSensors.clawGrab::pressed),
+                close()
         );
     }
 

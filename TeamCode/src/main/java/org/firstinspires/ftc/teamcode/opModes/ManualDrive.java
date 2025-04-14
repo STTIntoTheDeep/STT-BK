@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opModes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -16,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.Point;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.Vector;
 
 import java.util.List;
-
+@Disabled
 @TeleOp(name = "ManualDrive",group = "TeleOp")
 public class ManualDrive extends rootOpMode {
     Drivetrain drivetrain;

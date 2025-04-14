@@ -57,9 +57,9 @@ public class intakeTest extends rootOpMode {
 //            intake.setElbow(yaw, pitch);
             intake.elbowYDistance(cm);
 
-            intake.wristToAngle(Math.toRadians(angle) + 0.5*Math.PI - Math.acos(cm/intake.armLength));
+//            intake.wristToAngle(Math.toRadians(angle) + 0.5*Math.PI - Math.acos(cm/intake.armLength));
 //            intake.wristToAngle(Math.toRadians(angle));
-//            hardware.servos.wrist.setServo(angle);
+            hardware.servos.wrist.setServo(angle);
 
             hardware.servos.intake.setServo(claw);
 //            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {

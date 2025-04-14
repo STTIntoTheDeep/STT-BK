@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
+import com.rowanmcalpin.nextftc.core.command.utility.InstantCommand;
 
 import org.firstinspires.ftc.teamcode.subsystems.FollowPath;
 import org.firstinspires.ftc.teamcode.subsystems.OuttakeClaw;
@@ -23,7 +24,8 @@ public class Spec1 extends newRootOpMode {
 //                                new WaitUntil(hardware::touchingSubmersible)
 //                        ),scoreSpecimen()
 //                ),
-                driveToSubmersible(new FollowPath(path1, true, 1.0, follower), 4.5),
+                driveToSubmersible(new FollowPath(path1, true, 1.0, follower)),
+                new InstantCommand(() -> follower.breakFollowing()),
                 fullArm()
         ).invoke();
     }

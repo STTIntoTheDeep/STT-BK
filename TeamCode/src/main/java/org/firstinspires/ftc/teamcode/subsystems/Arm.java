@@ -23,10 +23,10 @@ public class Arm extends Subsystem {
     boolean armDown, previousArmDown;
     double timer = 0;
 
-    public PIDFController controller = new PIDFController(0.006, 0.0, 0.0, new StaticFeedforward(0), 20);
+    public PIDFController controller = new PIDFController(0.008, 0.0, 0.0, new StaticFeedforward(0), 20);
 //new ArmFeedforward(0.3, ticksToAngle -> 750/Math.PI)
 
-    public static Command reset() {
+    public Command reset() {
         return new InstantCommand(() -> {
             hardware.motors.outtake.dcMotorEx.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             hardware.motors.outtake.dcMotorEx.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -41,7 +41,8 @@ public class Arm extends Subsystem {
     }
 
     public Command toHigh() {
-        return toPosition(430);
+        //TODO: touch sensor?
+        return toPosition(440);
     }
 
     public Command toPosition(double position) {
@@ -71,6 +72,7 @@ public class Arm extends Subsystem {
             armDown = hardware.touchSensors.armDown.pressed();
             if (armDown && !previousArmDown) reset();
         }
+        OpModeData.telemetry.addData("touchy touchy", hardware.touchingBorder());
         OpModeData.telemetry.addData("pos", motor.getCurrentPosition());
 //        OpModeData.telemetry.update();
     }

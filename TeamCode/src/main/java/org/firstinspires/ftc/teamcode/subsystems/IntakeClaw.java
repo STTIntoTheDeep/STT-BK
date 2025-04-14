@@ -35,7 +35,7 @@ public class IntakeClaw extends Subsystem {
                 new Delay(0.25));
     }
 
-    public Command intakeToggle(){
+    public Command toggle(){
         return new BlockingConditionalCommand(
                 () -> servo.getPosition() == hardware.servoPositions.intakeGrip.getPosition(),
                 this::open,

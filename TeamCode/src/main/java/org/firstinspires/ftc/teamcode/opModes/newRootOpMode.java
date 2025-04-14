@@ -7,6 +7,7 @@ import com.rowanmcalpin.nextftc.core.command.Command;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelDeadlineGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.ParallelGroup;
 import com.rowanmcalpin.nextftc.core.command.groups.SequentialGroup;
+import com.rowanmcalpin.nextftc.core.command.utility.InstantCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.NullCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.conditionals.BlockingConditionalCommand;
 import com.rowanmcalpin.nextftc.core.command.utility.delays.Delay;
@@ -69,52 +70,72 @@ public class newRootOpMode extends NextFTCOpMode {
 //                .setLinearHeadingInterpolation(startPose.getHeading(), finishPose.getHeading())
 //                .build();
 //        back = follower.pathBuilder()
-//                .addPath(new BezierLine(new Point(finishPose), new Point(startPose)))
-//                .setLinearHeadingInterpolation(finishPose.getHeading(), startPose.getHeading())
+//                .addPath(new BezierLine(startPoint, new Point(-32,startPoint.getY())))
+//                .setConstantHeadingInterpolation(0)
 //                .build();
         path1 = follower.pathBuilder() //start to submersible
-                .addPath(new BezierLine(
+                .addPath(new BezierCurve(
                         startPoint,
-                        new Point(39.580, 68.5, Point.CARTESIAN)))
+                        new Point(14.355140186915888,69.08411214953271, Point.CARTESIAN),
+                        new Point(42, 68.5, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         path2 = follower.pathBuilder() //submersible to back of first sample
                 .addPath(new BezierCurve(
                         path1.getPath(0).getLastControlPoint(),
                         new Point(14.843, 63.537, Point.CARTESIAN),
-                        new Point(4.687, 15, Point.CARTESIAN),
-                        new Point(91.660, 50, Point.CARTESIAN),
-                        new Point(58.590, 32, Point.CARTESIAN)))
+                        new Point(4.687, 13, Point.CARTESIAN),
+                        new Point(82, 50, Point.CARTESIAN),
+                        new Point(52, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
                 .addPath(new BezierLine(
-                        new Point(58.590, 32, Point.CARTESIAN),
-                        new Point(22, 32, Point.CARTESIAN)))
+                        new Point(52, 30, Point.CARTESIAN),
+                        new Point(20, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
                 .addPath(new BezierCurve(
-                        new Point(22, 32, Point.CARTESIAN),
-                        new Point(74.474, 32, Point.CARTESIAN),
-                        new Point(58.590, 25, Point.CARTESIAN)))
+                        new Point(20, 30, Point.CARTESIAN),
+                        new Point(68.5, 30, Point.CARTESIAN),
+                        new Point(52, 20, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
                 .addPath(new BezierLine(
-                        new Point(58.590, 25, Point.CARTESIAN),
-                        new Point(22, 25, Point.CARTESIAN)))
+                        new Point(52, 20, Point.CARTESIAN),
+                        new Point(20, 20, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
                 .addPath(new BezierCurve(
-                        new Point(22, 25, Point.CARTESIAN),
-                        new Point(74.213, 25, Point.CARTESIAN),
-                        new Point(58.850, 18, Point.CARTESIAN)))
+                        new Point(20, 20, Point.CARTESIAN),
+                        new Point(68.5, 20, Point.CARTESIAN),
+                        new Point(52, 14, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
+                .addPath(new BezierLine(
+                        new Point(52, 14, Point.CARTESIAN),
+                        new Point(18, 14, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .setPathEndVelocityConstraint(8)
+                .setPathEndTranslationalConstraint(3)
+                .setPathEndTimeoutConstraint(0)
                 .build();
 //        path3 = follower.pathBuilder() //first sample to second sample
-//                .addPath(new BezierLine(
-//                        new Point(58.590, 32, Point.CARTESIAN),
-//                        new Point(22, 32, Point.CARTESIAN)))
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
 //                .addPath(new BezierCurve(
-//                        new Point(22, 32, Point.CARTESIAN),
-//                        new Point(74.474, 32, Point.CARTESIAN),
-//                        new Point(58.590, 25, Point.CARTESIAN)))
-//                .setConstantHeadingInterpolation(Math.toRadians(0))
+//                        path1.getPath(0).getLastControlPoint(),
+//                        new Point(23.776, 59.215, Point.CARTESIAN),
+//                        new Point(23.551, 39.701,  Point.CARTESIAN)))
+//                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-40))
+//                .setPathEndTimeoutConstraint(4.5)
 //                .build();
 //        path4 = follower.pathBuilder() //second sample to third sample
 //                .addPath(new BezierLine(
@@ -128,29 +149,25 @@ public class newRootOpMode extends NextFTCOpMode {
 //                .setConstantHeadingInterpolation(Math.toRadians(0))
 //                .build();
         path5 = follower.pathBuilder() //observation zone to obtaining specimen
-                .addPath(new BezierLine(
-                        new Point(58.850, 18, Point.CARTESIAN),
-                        new Point(22, 18, Point.CARTESIAN)))
-                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(22 , 18, Point.CARTESIAN),
+                        path2.getPath(5).getLastControlPoint(),
                         new Point(34.633, 31.248, Point.CARTESIAN),
                         new Point(9.374, 51.559, Point.CARTESIAN),
-                        new Point(8.593, 25.259, Point.CARTESIAN)))
+                        new Point(3, 36, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         path6 = follower.pathBuilder() //scoring specimen
                 .addPath(new BezierCurve(
-                        new Point(8.593, 25.259, Point.CARTESIAN),
+                        new Point(3, 30, Point.CARTESIAN),
                         new Point(14.061, 65.881, Point.CARTESIAN),
-                        new Point(39.320, 69.266, Point.CARTESIAN)))
+                        new Point(44, 72, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         path7 = follower.pathBuilder() //returning to grab specimen from submersible
                 .addPath(new BezierCurve(
-                        new Point(39.320, 69.266, Point.CARTESIAN),
+                        new Point(44, 72, Point.CARTESIAN),
                         new Point(5.989, 60.933, Point.CARTESIAN),
-                        new Point(8.854, 23.696, Point.CARTESIAN)))
+                        new Point(3, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
     }
@@ -167,7 +184,7 @@ public class newRootOpMode extends NextFTCOpMode {
     protected static Command grabSpecimen() {
         return new SequentialGroup(
                 Arm.INSTANCE.toDown(),
-                OuttakeClaw.INSTANCE.close()
+                OuttakeClaw.INSTANCE.closeWhenSample()
         );
     }
 
@@ -204,9 +221,14 @@ public class newRootOpMode extends NextFTCOpMode {
         );
     }
 
+    protected Command intakeSimple(double cm){
+        return new SequentialGroup(locateSampleSimple(cm), grabSequence());
+    }
+
     protected Command locateSampleSimple() {
         //Move until you've found a good one
         return new SequentialGroup(
+                new InstantCommand(() -> Camera.INSTANCE.samplePipeline.externalBestSampleInformation = null),
                 new WaitUntil(() -> hardware.getSlideLength() > 20),
                 cameraDown(),
                 new Delay(0.075),
@@ -215,9 +237,20 @@ public class newRootOpMode extends NextFTCOpMode {
         );
     }
 
+    protected Command locateSampleSimple(double cm) {
+        //Move until you've found a good one
+        return new SequentialGroup(
+                cameraDown(),
+                Slides.INSTANCE.toCM(cm),
+                new Delay(0.075),
+                Camera.INSTANCE.locateSampleSimple(),
+                IntakeClaw.INSTANCE.open()
+        );
+    }
+
     protected Command grabSequenceWithCheck() {
         return new BlockingConditionalCommand(
-                () -> Camera.INSTANCE.samplePipeline.externalBestSampleInformation == null,
+                () -> Camera.INSTANCE.samplePipeline.externalBestSampleInformation != null,
                 this::grabSequence,
                 NullCommand::new
         );
@@ -233,6 +266,7 @@ public class newRootOpMode extends NextFTCOpMode {
                         Slides.INSTANCE.toCM(Camera.INSTANCE.slideTarget)),
                 //Move elbow sideways
                 Elbow.INSTANCE.yDistance(Camera.INSTANCE.samplePipeline.externalBestSampleInformation[0]).thenWait(0.25).asDeadline(Slides.INSTANCE.toCM(Camera.INSTANCE.slideTarget)),
+                new Delay(0.25),
                 //Grab sample
                 IntakeClaw.INSTANCE.close().asDeadline(Slides.INSTANCE.toCM(Camera.INSTANCE.slideTarget)),
                 new Delay(0.25),
@@ -244,6 +278,11 @@ public class newRootOpMode extends NextFTCOpMode {
 
     protected Command retractIntake() {
         return new SequentialGroup(
+                new BlockingConditionalCommand(
+                        () -> hardware.getSlideLength() < 20,
+                        () -> Slides.INSTANCE.toCM(20),
+                        NullCommand::new
+                ),
                 //Move elbow up
                 new ParallelGroup(
                         Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowTransfer.getDifferential()),
@@ -256,26 +295,34 @@ public class newRootOpMode extends NextFTCOpMode {
     }
 
     protected Command dropSample() {
-        return new SequentialGroup(Slides.INSTANCE.toCM(10), Elbow.INSTANCE.cameraDown(), Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowDrop.getDifferential()));
+        return new SequentialGroup(
+                Slides.INSTANCE.toCM(20),
+                Elbow.INSTANCE.cameraDown(),
+                new Delay(1.0),
+                Elbow.INSTANCE.setElbow(hardware.servoPositions.elbowDrop.getDifferential()),
+                Slides.INSTANCE.toCM(10)
+        );
     }
 
     /**
      * @param followPath
-     * @param maxTime
      * @return
      */
-    public static Command driveToSubmersible(FollowPath followPath, double maxTime) {
+    public Command driveToSubmersible(FollowPath followPath) {
         return new ParallelDeadlineGroup(
-                new WaitUntil(hardware::touchingSubmersible).endAfter(maxTime),
+                new WaitUntil(hardware::touchingSubmersible),
+                followPath
+        );
+    }
+    /**
+     * @param followPath
+     * @return
+     */
+    public static Command driveToPickup(FollowPath followPath) {
+        return new ParallelDeadlineGroup(
+                new WaitUntil(hardware::touchingBorder),
                 followPath);
     }
-
-    /**
-     * Defaults to 4.0 seconds
-     * @param followPath
-     * @return
-     */
-    public static Command driveToSubmersible(FollowPath followPath) {return driveToSubmersible(followPath, 4.0);}
 
     //TODO: see if we can event-base things with this
     public Button touchingSubmersible() {return new Button(hardware::touchingSubmersible);}
@@ -310,6 +357,7 @@ public class newRootOpMode extends NextFTCOpMode {
             driverControlled = new MecanumDriverControlled(motors, gamepadManager.getGamepad1());
             return;
         }
+        OuttakeClaw.INSTANCE.close().invoke();
         follower = new Follower(hardwareMap);
         follower.setStartingPose(new Pose(startPoint.getX(), startPoint.getY()));
         buildPaths();

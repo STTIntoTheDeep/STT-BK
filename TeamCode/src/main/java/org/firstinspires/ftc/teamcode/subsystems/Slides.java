@@ -26,8 +26,9 @@ public class Slides extends Subsystem {
     }
 
     public Command setPowerWithinLimits(double power) {
-        if (hardware.tooLong()) {
-            return setPower(Math.min(power, -0.3));
+        if (hardware.getSlideLength() > 60) {
+            if (power > 0) return setPower(0);
+            else return setPower(power);
         } else return setPower(power);
     }
 

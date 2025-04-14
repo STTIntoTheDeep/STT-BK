@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.rowanmcalpin.nextftc.core.Subsystem;
 import com.rowanmcalpin.nextftc.core.command.Command;
+import com.rowanmcalpin.nextftc.core.command.utility.conditionals.BlockingConditionalCommand;
 import com.rowanmcalpin.nextftc.ftc.OpModeData;
 import com.rowanmcalpin.nextftc.ftc.hardware.ServoToPosition;
 
@@ -25,6 +26,14 @@ public class Wrist extends Subsystem {
 
     public Command cameraToBack() {
         return new ServoToPosition(servo, hardware.servoPositions.wristSpecimenCamera.getPosition(), this);
+    }
+
+    public Command toggle(){
+        return new BlockingConditionalCommand(
+                () -> servo.getPosition() == hardware.servoPositions.wristTransfer.getPosition(),
+                this::cameraToFront,
+                this::toTransfer
+        );
     }
 
     double lowerLimit = 0.26, upperLimit = 1.0, symmetries = 2;

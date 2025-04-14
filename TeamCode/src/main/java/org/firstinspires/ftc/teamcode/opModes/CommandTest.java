@@ -119,6 +119,7 @@ public class CommandTest extends newRootOpMode {
 //        gamepadManager.getGamepad1().getB().setPressedCommand(this::g);
         gamepadManager.getGamepad1().getY().setPressedCommand(this::cameraDown);
         gamepadManager.getGamepad1().getX().setPressedCommand(this::cameraWide);
+        gamepadManager.getGamepad1().getA().setPressedCommand(() -> intakeSimple(40));
 //        gamepadManager.getGamepad1().getY().setPressedCommand(this::j);
 //        gamepadManager.getGamepad1().getB().setPressedCommand(this::k);
         gamepadManager.getGamepad1().getDpadDown().setPressedCommand(this::grabSequence);

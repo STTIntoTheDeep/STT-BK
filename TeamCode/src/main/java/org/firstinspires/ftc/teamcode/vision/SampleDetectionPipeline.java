@@ -104,7 +104,7 @@ public class SampleDetectionPipeline extends OpenCvPipeline {
          */
         void inferY() {
             cameraYAngle = (cameraPosition.y - 0.5 * yPixels) * yDegreePerPixel;
-            actualY = cameraZPos * Math.tan(Math.toRadians(cameraAlpha - cameraYAngle)) / 2 + cameraXPos;
+            actualY = cameraZPos * Math.tan(Math.toRadians(cameraAlpha - cameraYAngle)) * 0.545 + cameraXPos;
             //TODO: correct for intake offset
         }
 
